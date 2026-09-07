@@ -65,6 +65,12 @@ enable_cloud_armor    = true
 enable_github_wif     = false
 enable_scribe         = false
 enable_jumphost       = true
+enable_recaptcha      = false
+
+# reCAPTCHA. The key is always provisioned by infra/; enable_recaptcha only controls
+# whether the site/secret keys are injected into the CARE backend secret.
+# recaptcha_additional_domains is appended to web_domain_name and api_domain_name.
+recaptcha_additional_domains = []
 
 # Service account used by workloads/automation where applicable.
 service_account_email = "iac-tofu@example-project-id.iam.gserviceaccount.com"

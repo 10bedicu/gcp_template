@@ -7,6 +7,13 @@ resource "kubernetes_secret" "care_backend" {
   type       = "Opaque"
   data       = { for k, v in local.secret_data : k => v }
   depends_on = [kubernetes_namespace.care_namespace]
+
+  lifecycle {
+    precondition {
+      condition     = !var.enable_recaptcha || (local.recaptcha_site_key != null && local.recaptcha_secret_key != null)
+      error_message = "enable_recaptcha is set but the infra module has not published the reCAPTCHA outputs. Apply infra/ with the same tfvars first."
+    }
+  }
 }
 
 resource "kubernetes_secret" "metabase" {

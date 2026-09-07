@@ -153,3 +153,16 @@ output "scribe_sa_key_b64" {
   value       = try(google_service_account_key.scribe[0].private_key, "")
   sensitive   = true
 }
+
+# --- reCAPTCHA Outputs ---
+
+output "recaptcha_site_key" {
+  description = "reCAPTCHA site key (public, safe to embed in the frontend build)"
+  value       = google_recaptcha_enterprise_key.care.name
+}
+
+output "recaptcha_secret_key" {
+  description = "Legacy reCAPTCHA secret key used with https://www.google.com/recaptcha/api/siteverify. Null unless enable_recaptcha is set."
+  value       = var.enable_recaptcha ? jsondecode(data.http.recaptcha_legacy_secret[0].response_body).legacySecretKey : null
+  sensitive   = true
+}

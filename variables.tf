@@ -531,3 +531,17 @@ variable "external_tls_base_domains" {
     error_message = "external_tls_base_domains must be non-empty when external_tls_cert is provided."
   }
 }
+
+# --- reCAPTCHA ---
+
+variable "enable_recaptcha" {
+  description = "Inject reCAPTCHA site/secret keys into the CARE backend secret. The key itself is always provisioned by the infra module, so toggling this off never destroys it."
+  type        = bool
+  default     = false
+}
+
+variable "recaptcha_additional_domains" {
+  description = "Extra domains allowed to use the reCAPTCHA key, appended to web_domain_name and api_domain_name. Normally left empty."
+  type        = list(string)
+  default     = []
+}
