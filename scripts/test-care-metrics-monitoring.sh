@@ -13,7 +13,8 @@ assert_contains() {
 }
 
 test -f "$FILE"
-assert_contains 'resource "google_monitoring_dashboard" "care_metrics_exporter"'
+assert_contains 'resource "google_monitoring_dashboard" "care_application"'
+assert_contains 'displayName = "CARE Application - ${var.environment}"'
 assert_contains 'resource "google_monitoring_notification_channel" "email"'
 assert_contains 'resource "google_monitoring_alert_policy" "care_queue_length"'
 assert_contains 'for_each = var.monitoring_notification_emails'

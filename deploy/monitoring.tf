@@ -1,13 +1,12 @@
 locals {
-  care_metrics_selector = "cluster=\"${data.terraform_remote_state.infra.outputs.cluster_name}\",namespace=\"${local.namespace_name}\",queue=\"${var.helm_config.care_metrics_exporter.queue}\""
+  celery_queue_length_query = "max by (queue) (celery_queue_length{cluster=\"${data.terraform_remote_state.infra.outputs.cluster_name}\",namespace=\"${local.namespace_name}\",queue=\"${var.helm_config.care_metrics_exporter.queue}\"})"
 }
 
-resource "google_monitoring_dashboard" "care_metrics_exporter" {
-  count   = var.helm_config.care_metrics_exporter.enabled ? 1 : 0
+resource "google_monitoring_dashboard" "care_application" {
   project = var.project_id
 
   dashboard_json = jsonencode({
-    displayName = "CARE Celery Queue - ${var.environment}"
+    displayName = "CARE Application - ${var.environment}"
     mosaicLayout = {
       columns = 48
       tiles = [{
@@ -22,7 +21,7 @@ resource "google_monitoring_dashboard" "care_metrics_exporter" {
               plotType   = "LINE"
               targetAxis = "Y1"
               timeSeriesQuery = {
-                prometheusQuery = "max by (queue) (celery_queue_length{${local.care_metrics_selector}})"
+                prometheusQuery = local.celery_queue_length_query
               }
             }]
             yAxis = {
@@ -66,7 +65,7 @@ resource "google_monitoring_alert_policy" "care_queue_length" {
   conditions {
     display_name = "Celery queue length is greater than 250"
     condition_prometheus_query_language {
-      query               = "max by (queue) (celery_queue_length{${local.care_metrics_selector}}) > 250"
+      query               = "${local.celery_queue_length_query} > 250"
       duration            = "300s"
       evaluation_interval = "60s"
       alert_rule          = "CareCeleryQueueAbove250"
