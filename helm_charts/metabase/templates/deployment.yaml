@@ -5,6 +5,8 @@ metadata:
   labels:
     {{- include "metabase.labels" . | nindent 4 }}
 spec:
+  strategy:
+    {{- toYaml (.Values.strategy | default (dict "type" "RollingUpdate")) | nindent 4 }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -148,4 +150,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-

@@ -3,7 +3,7 @@ locals {
 
   wif_github_repo      = var.github_repo
   wif_environment_name = var.project_id
-  wif_sa_name          = "${var.org}-${var.environment}-${var.app}-gh-deployer"
+  wif_sa_name          = coalesce(var.wif_sa_name, "${var.org}-${var.environment}-${var.app}-gh-deployer")
 
   # ---------------------------------------------------------------------------
   # Predefined roles — minimum required to run `tofu apply` on deploy/ and

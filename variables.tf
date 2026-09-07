@@ -220,6 +220,12 @@ variable "enable_legacy_ingress" {
   default     = false
 }
 
+variable "enable_local_cors" {
+  description = "Include localhost:4000 in backend CORS allowed origins (development/non-production only)"
+  type        = bool
+  default     = false
+}
+
 variable "enable_jumphost" {
   description = "Enable jumphost VM and related resources"
   type        = bool
@@ -233,35 +239,94 @@ variable "jwks_base64" {
 }
 
 variable "helm_config" {
-  description = "Helm image/release configuration per service."
+  description = "Helm image, replica, resource, and rollout configuration per service. Resource fields are Kubernetes resource blocks passed through to Helm."
   type = object({
+    deployment_strategy = optional(string, "RollingUpdate")
     care_backend = object({
       repository                             = string
       tag                                    = string
       api_replica_count                      = optional(number, 2)
+      api_resources                          = optional(any)
       api_autoscaling_enabled                = optional(bool, false)
       api_autoscaling_min_replicas           = optional(number, 2)
       api_autoscaling_max_replicas           = optional(number, 6)
       api_autoscaling_target_cpu             = optional(number, 80)
       celery_worker_replica_count            = optional(number, 1)
+      celery_worker_resources                = optional(any)
       celery_worker_autoscaling_enabled      = optional(bool, false)
       celery_worker_autoscaling_min_replicas = optional(number, 2)
       celery_worker_autoscaling_max_replicas = optional(number, 6)
       celery_worker_autoscaling_target_cpu   = optional(number, 80)
+      celery_beat_replica_count              = optional(number, 1)
+      celery_beat_resources                  = optional(any)
     })
     care_frontend = object({
-      repository = string
-      tag        = string
+      repository    = string
+      tag           = string
+      replica_count = optional(number, 2)
+      resources     = optional(any)
     })
     metabase = optional(object({
-      repository = optional(string, "metabase/metabase")
-      tag        = optional(string, "v0.63.13")
+      repository    = optional(string, "metabase/metabase")
+      tag           = optional(string, "v0.63.13")
+      replica_count = optional(number, 1)
+      resources     = optional(any)
     }), {})
     redis = optional(object({
-      repository = optional(string, "redis")
-      tag        = optional(string, "8-alpine")
+      repository    = optional(string, "redis")
+      tag           = optional(string, "8-alpine")
+      replica_count = optional(number, 1)
+      resources     = optional(any)
     }), {})
   })
+
+  validation {
+    condition = alltrue([
+      for count in [
+        var.helm_config.care_backend.api_replica_count,
+        var.helm_config.care_backend.celery_worker_replica_count,
+        var.helm_config.care_backend.celery_beat_replica_count,
+        var.helm_config.care_frontend.replica_count,
+        var.helm_config.metabase.replica_count,
+        var.helm_config.redis.replica_count,
+      ] : count >= 0 && floor(count) == count if count != null
+    ])
+    error_message = "All Helm replica counts must be non-negative integers."
+  }
+
+  validation {
+    condition     = contains(["RollingUpdate", "Recreate"], var.helm_config.deployment_strategy)
+    error_message = "helm_config.deployment_strategy must be either \"RollingUpdate\" or \"Recreate\"."
+  }
+
+  validation {
+    condition = alltrue([
+      for resources in [
+        var.helm_config.care_backend.api_resources,
+        var.helm_config.care_backend.celery_worker_resources,
+        var.helm_config.care_backend.celery_beat_resources,
+        var.helm_config.care_frontend.resources,
+        var.helm_config.metabase.resources,
+        var.helm_config.redis.resources,
+        ] : resources == null || (
+        can(keys(resources)) &&
+        length(setsubtract(keys(resources), ["requests", "limits"])) == 0 &&
+        can(keys(resources.requests)) &&
+        can(keys(resources.limits)) &&
+        length(setsubtract(keys(resources.requests), ["cpu", "memory"])) == 0 &&
+        length(setsubtract(keys(resources.limits), ["cpu", "memory"])) == 0 &&
+        try(resources.requests.cpu, null) != null &&
+        try(resources.requests.memory, null) != null &&
+        can(resources.limits.cpu) &&
+        try(resources.limits.memory, null) != null &&
+        can(regex("^([0-9]+m|[0-9]+(\\.[0-9]+)?|\\.[0-9]+)$", tostring(resources.requests.cpu))) &&
+        can(regex("^([0-9]+(\\.[0-9]+)?|\\.[0-9]+)(Ki|Mi|Gi|Ti|Pi|Ei|K|M|G|T|P|E)?$", tostring(resources.requests.memory))) &&
+        can(regex("^([0-9]+(\\.[0-9]+)?|\\.[0-9]+)(Ki|Mi|Gi|Ti|Pi|Ei|K|M|G|T|P|E)?$", tostring(resources.limits.memory))) &&
+        (try(resources.limits.cpu, null) == null || can(regex("^([0-9]+m|[0-9]+(\\.[0-9]+)?|\\.[0-9]+)$", tostring(resources.limits.cpu))))
+      )
+    ])
+    error_message = "Each helm_config resource override must contain only requests.cpu, requests.memory, limits.cpu, and limits.memory. CPU must be a Kubernetes CPU quantity like 25m, 0.5, or 1; memory must be a Kubernetes memory quantity like 256Mi, 1.5Gi, or 2Gi. Use limits.cpu = null only when intentionally removing the CPU limit."
+  }
 
   validation {
     condition     = var.helm_config.care_backend.api_autoscaling_min_replicas >= 1
@@ -419,6 +484,17 @@ variable "scribe_sa_name" {
   description = "Override for the Scribe Vertex AI service account ID. Defaults to gemini-scribe."
   type        = string
   default     = null
+}
+
+variable "wif_sa_name" {
+  description = "Override for the GitHub WIF service account ID. Defaults to <org>-<environment>-<app>-gh-deployer. Max 30 chars."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.wif_sa_name == null || can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]$", var.wif_sa_name))
+    error_message = "wif_sa_name must be 6-30 characters, start with a lowercase letter, end with a lowercase letter or digit, and contain only lowercase letters, digits, and hyphens."
+  }
 }
 
 variable "external_tls_cert" {

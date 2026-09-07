@@ -5,6 +5,8 @@ metadata:
   labels:
     {{- include "redis.labels" . | nindent 4 }}
 spec:
+  strategy:
+    {{- toYaml (.Values.strategy | default (dict "type" "RollingUpdate")) | nindent 4 }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
