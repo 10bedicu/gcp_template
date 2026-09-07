@@ -11,5 +11,5 @@ spec:
   endpoints:
     - port: metrics
       path: /metrics
-      interval: 30s
-      timeout: 10s
+      interval: {{ .Values.podMonitoring.interval }}
+      timeout: {{ .Values.podMonitoring.timeout }}

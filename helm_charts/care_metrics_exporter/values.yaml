@@ -1,10 +1,22 @@
+replicaCount: 1
+
+strategy:
+  type: RollingUpdate
+
 image:
   repository: ghcr.io/jesbinjoseph/care-metrics-exporter
   tag: 8ab2445d7cf88e6f335f1d951062c1b6f9df9a3d
   pullPolicy: IfNotPresent
 
+imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: care-metrics-exporter
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+  automount: false
 
 brokerSecret:
   name: care-backend-secret
@@ -14,6 +26,52 @@ queue: celery
 logLevel: INFO
 
 podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations: {}
+
+podMonitoring:
+  interval: 30s
+  timeout: 10s
+
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /healthz
+    port: metrics
+  initialDelaySeconds: 5
+  periodSeconds: 20
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /healthz
+    port: metrics
+  initialDelaySeconds: 2
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
 
 resources:
   requests:
@@ -22,3 +80,13 @@ resources:
   limits:
     cpu: 50m
     memory: 64Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

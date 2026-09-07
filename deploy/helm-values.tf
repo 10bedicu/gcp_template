@@ -74,6 +74,7 @@ locals {
   )
 
   care_metrics_exporter_values = {
+    strategy = { type = var.helm_config.deployment_strategy }
     image = {
       repository = var.helm_config.care_metrics_exporter.repository
       tag        = var.helm_config.care_metrics_exporter.tag
