@@ -10,7 +10,7 @@ Infrastructure-as-code for the CARE application on Google Cloud Platform, using 
 | `KMS/` | KMS key ring and encryption keys |
 | `infra/` | Core platform (VPC, GKE, Cloud SQL, GCS, Cloud Armor, GitHub WIF) |
 | `deploy/` | Kubernetes namespace, secrets, Helm releases |
-| `helm_charts/` | Application Helm charts (`care_be`, `care_fe`, `gateway`, `metabase`, `redis`, `dcm4chee`) |
+| `helm_charts/` | Application Helm charts (`care_be`, `care_fe`, `gateway`, `metabase`, `redis`, `dcm4chee`, `care_metrics_exporter`) |
 | `environments/` | Sample tfvars template and variable documentation |
 | `scripts/` | Helper scripts for tfvars synchronisation with Secret Manager |
 
@@ -94,6 +94,28 @@ All application replica counts and resources can be configured independently in 
 Use `deployment_strategy = "Recreate"` for tightly packed single-node environments so a rollout does not require the old and replacement pods to fit simultaneously. This introduces brief workload downtime during updates. The default remains `RollingUpdate` for environments with rollout headroom.
 
 Replica counts accept non-negative integers. Increasing a replica count also multiplies that workload's requests; verify the new total against node allocatable capacity before applying. These controls do not configure DICOM workloads.
+
+## Celery Queue Monitoring
+
+Enable the standalone CARE metrics exporter through `helm_config`:
+
+```hcl
+helm_config = {
+  # Existing service configuration omitted.
+  care_metrics_exporter = {
+    enabled = true
+
+    # Optional immutable image overrides:
+    # repository = "ghcr.io/jesbinjoseph/care-metrics-exporter"
+    # tag        = "8ab2445d7cf88e6f335f1d951062c1b6f9df9a3d"
+  }
+}
+
+# Optional. Omit or leave empty to create no email channels.
+monitoring_notification_emails = ["care-ops@example.org"]
+```
+
+The exporter reads only `CELERY_BROKER_URL` from the existing CARE backend Secret. Google Managed Service for Prometheus scrapes it through a namespaced `PodMonitoring`; no self-hosted Prometheus or Prometheus Operator is installed. OpenTofu creates a queue-length dashboard and an alert when the `celery` queue remains above 250 messages for five minutes. Queue depth measures waiting work only, not active or reserved Celery tasks.
 
 ## Security
 

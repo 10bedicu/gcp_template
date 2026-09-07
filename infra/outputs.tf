@@ -5,6 +5,11 @@ output "gke_dns_endpoint" {
   value       = module.gke_cluster.endpoint_dns
 }
 
+output "cluster_name" {
+  description = "Name of the GKE cluster"
+  value       = module.gke_cluster.name
+}
+
 # --- Cloud SQL Outputs ---
 
 output "instance_address" {

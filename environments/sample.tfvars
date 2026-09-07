@@ -137,7 +137,17 @@ helm_config = {
       limits   = { cpu = null, memory = "256Mi" }
     }
   }
+  care_metrics_exporter = {
+    enabled = false
+
+    # Optional overrides; defaults are the immutable image proven in Manipur:
+    # repository = "ghcr.io/jesbinjoseph/care-metrics-exporter"
+    # tag        = "8ab2445d7cf88e6f335f1d951062c1b6f9df9a3d"
+  }
 }
+
+# Optional. Omit this setting or leave it empty to create no email channels.
+monitoring_notification_emails = []
 
 # GitHub repository allowed to use Workload Identity Federation (owner/repo).
 github_repo = "example-org/example-repo"

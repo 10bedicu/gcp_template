@@ -1,6 +1,7 @@
 locals {
   care_backend_secret_checksum = nonsensitive(sha256(jsonencode(local.secret_data)))
   care_backend_config_checksum = sha256(jsonencode(local.config_map_data))
+  care_metrics_broker_checksum = nonsensitive(sha256(local.secret_data.CELERY_BROKER_URL))
   metabase_secret_checksum     = nonsensitive(sha256(jsonencode(local.metabase_secret_data)))
   dcm4chee_secret_checksum     = var.enable_dicom ? nonsensitive(sha256(jsonencode(local.dicom_secret_data))) : ""
 
@@ -71,6 +72,22 @@ locals {
     },
     var.helm_config.redis.resources != null ? { resources = var.helm_config.redis.resources } : {}
   )
+
+  care_metrics_exporter_values = {
+    image = {
+      repository = var.helm_config.care_metrics_exporter.repository
+      tag        = var.helm_config.care_metrics_exporter.tag
+    }
+    brokerSecret = {
+      name = kubernetes_secret.care_backend.metadata[0].name
+      key  = "CELERY_BROKER_URL"
+    }
+    queue    = var.helm_config.care_metrics_exporter.queue
+    logLevel = upper(var.helm_config.care_metrics_exporter.log_level)
+    podAnnotations = {
+      "checksum/broker-secret" = local.care_metrics_broker_checksum
+    }
+  }
 
   metabase_values = {
     replicaCount = var.helm_config.metabase.replica_count

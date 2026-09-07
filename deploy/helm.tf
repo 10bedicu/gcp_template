@@ -81,6 +81,32 @@ resource "helm_release" "redis" {
     ignore_changes = [metadata]
   }
 }
+
+# Helm Chart for CARE Metrics Exporter
+resource "helm_release" "care_metrics_exporter" {
+  count       = var.helm_config.care_metrics_exporter.enabled ? 1 : 0
+  name        = "care-metrics-exporter"
+  chart       = "${path.module}/../helm_charts/care_metrics_exporter"
+  namespace   = local.namespace_name
+  max_history = 10
+
+  values = [
+    yamlencode(merge(
+      local.care_metrics_exporter_values,
+      { chartHash = local.chart_hashes.care_metrics_exporter },
+    ))
+  ]
+
+  depends_on = [
+    helm_release.redis,
+    kubernetes_secret.care_backend,
+  ]
+
+  lifecycle {
+    ignore_changes = [metadata]
+  }
+}
+
 # Helm Chart for Metabase Deployment
 resource "helm_release" "metabase" {
   name        = "metabase"

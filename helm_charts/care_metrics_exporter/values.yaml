@@ -1,0 +1,24 @@
+image:
+  repository: ghcr.io/jesbinjoseph/care-metrics-exporter
+  tag: 8ab2445d7cf88e6f335f1d951062c1b6f9df9a3d
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: care-metrics-exporter
+
+brokerSecret:
+  name: care-backend-secret
+  key: CELERY_BROKER_URL
+
+queue: celery
+logLevel: INFO
+
+podAnnotations: {}
+
+resources:
+  requests:
+    cpu: 5m
+    memory: 48Mi
+  limits:
+    cpu: 50m
+    memory: 64Mi

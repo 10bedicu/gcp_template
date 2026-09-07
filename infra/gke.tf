@@ -28,6 +28,9 @@ module "gke_cluster" {
   # release channel
   release_channel = "STABLE"
 
+  # Required by PodMonitoring resources used for application metrics.
+  monitoring_enable_managed_prometheus = true
+
   # → enable GKE Metadata Server for Workload Identity
   node_metadata = "GKE_METADATA_SERVER"
 

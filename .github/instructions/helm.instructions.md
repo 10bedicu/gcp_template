@@ -16,7 +16,7 @@ Each chart under `helm_charts/` contains:
 | `templates/_helpers.tpl` | Shared naming and label helpers |
 | `templates/*.yaml` | Workload, service, and routing templates |
 
-Current charts: `gateway`, `redis`, `metabase`, `care_be`, `care_fe`, `dcm4chee`.
+Current charts: `gateway`, `redis`, `metabase`, `care_be`, `care_fe`, `dcm4chee`, `care_metrics_exporter`.
 
 ## Common Helpers
 
@@ -41,6 +41,7 @@ When creating a new chart, copy `_helpers.tpl` from an existing chart and update
   ```
 - Define resource requests and limits explicitly in `values.yaml`.
 - Define liveness and readiness probes explicitly.
+- Exporter charts collected by Google Managed Service for Prometheus use `monitoring.googleapis.com/v1` `PodMonitoring`, not Prometheus Operator `ServiceMonitor`.
 
 ## Global Values Contract
 

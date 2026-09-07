@@ -25,7 +25,7 @@ locals {
   )
 
   chart_hashes = {
-    for name in ["gateway", "redis", "metabase", "care_be", "care_fe", "dcm4chee"] :
+    for name in ["gateway", "redis", "metabase", "care_be", "care_fe", "dcm4chee", "care_metrics_exporter"] :
     name => sha1(join("", [
       for f in sort(fileset("${path.module}/../helm_charts/${name}", "**")) :
       filesha1("${path.module}/../helm_charts/${name}/${f}")
