@@ -9,9 +9,7 @@ metadata:
 spec:
   strategy:
     {{- toYaml (.Values.strategy | default (dict "type" "RollingUpdate")) | nindent 4 }}
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "care-metrics-exporter.selectorLabels" . | nindent 6 }}

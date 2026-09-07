@@ -81,12 +81,6 @@ resources:
     cpu: 50m
     memory: 64Mi
 
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 3
-  targetCPUUtilizationPercentage: 80
-
 nodeSelector: {}
 tolerations: []
 affinity: {}
