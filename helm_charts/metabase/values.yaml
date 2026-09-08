@@ -146,3 +146,35 @@ httpRoute:
   gatewayName: "{{ .Values.global.gateway.name }}"
   annotations: {}
   hostnames: []
+
+# Warehouse provisioning job — runs on every helm upgrade via post-install/post-upgrade hook
+provision:
+  enabled: false
+  secretName: ""
+  sqlRepo: ""           # owner/repo (e.g. your-org/metabase_etl)
+  sqlRepoBranch: main   # branch, tag, or commit SHA
+  commitSha: ""         # latest resolved commit SHA of sqlRepoBranch; changing this re-runs the job
+  image:
+    git:
+      repository: alpine/git
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    psql:
+      repository: postgres
+      tag: "17-alpine"
+      pullPolicy: IfNotPresent
+  resources:
+    init:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+    main:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi

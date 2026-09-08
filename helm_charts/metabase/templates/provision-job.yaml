@@ -1,0 +1,101 @@
+{{- if .Values.provision.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "metabase.fullname" . }}-provision
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "metabase.labels" . | nindent 4 }}
+    app.kubernetes.io/component: provision
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade,post-rollback
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    # Forces a new Job manifest (and thus a Helm upgrade + hook run) whenever
+    # the upstream SQL repo has a new commit, even if no other value changed.
+    "checksum/etl-commit": {{ .Values.provision.commitSha | quote }}
+spec:
+  ttlSecondsAfterFinished: 43200
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        {{- include "metabase.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: provision
+    spec:
+      restartPolicy: Never
+
+      initContainers:
+        - name: fetch-sql
+          image: "{{ .Values.provision.image.git.repository }}:{{ .Values.provision.image.git.tag }}"
+          imagePullPolicy: {{ .Values.provision.image.git.pullPolicy }}
+          resources:
+            {{- toYaml .Values.provision.resources.init | nindent 12 }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -euo pipefail
+
+              REPO="{{ .Values.provision.sqlRepo }}"
+              REF="{{ .Values.provision.sqlRepoBranch }}"
+
+              echo "==> Fetching ${REPO}@${REF} (public)"
+              git init -q /repo
+              cd /repo
+              git remote add origin "https://github.com/${REPO}.git"
+              # git fetch (unlike clone --branch) accepts a branch, tag, or full commit SHA.
+              git fetch --depth=1 origin "$REF"
+              git checkout -q FETCH_HEAD
+              cd -
+              cp /repo/sql/0[0-6]-*.sql /sql/
+              echo "==> SQL files ready:"
+              ls /sql/
+          volumeMounts:
+            - name: sql-files
+              mountPath: /sql
+
+      containers:
+        - name: provision
+          image: "{{ .Values.provision.image.psql.repository }}:{{ .Values.provision.image.psql.tag }}"
+          imagePullPolicy: {{ .Values.provision.image.psql.pullPolicy }}
+          resources:
+            {{- toYaml .Values.provision.resources.main | nindent 12 }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -euo pipefail
+
+              run_sql() {
+                local file=$1 connstr=$2
+                echo "==> $file"
+                psql "$connstr" \
+                  -v WAREHOUSE_ETL_PASSWORD="$WAREHOUSE_ETL_PASSWORD" \
+                  -v FDW_READER_PASSWORD="$FDW_READER_PASSWORD" \
+                  -v METABASE_READER_PASSWORD="$METABASE_READER_PASSWORD" \
+                  -v SOURCE_REPLICA_HOST="$SOURCE_REPLICA_HOST" \
+                  -v SOURCE_DBNAME="$SOURCE_DBNAME" \
+                  -v WAREHOUSE_DB="$WAREHOUSE_DB" \
+                  -v ON_ERROR_STOP=1 \
+                  -f /sql/$file
+              }
+
+              run_sql 00-source-readonly-user.sql      "$CARE_SOURCE_URL"
+              run_sql 01-warehouse-fdw-setup.sql        "$WAREHOUSE_URL"
+              run_sql 02-import-care-foreign-tables.sql "$WAREHOUSE_URL"
+              run_sql 03-etl-functions.sql              "$WAREHOUSE_URL"
+              run_sql 04-register-care-tables.sql       "$WAREHOUSE_URL"
+              run_sql 05-pg-cron-schedules.sql          "$POSTGRES_URL"
+              run_sql 06-metabase-reader.sql            "$WAREHOUSE_URL"
+
+              echo "==> Done"
+          envFrom:
+            - secretRef:
+                name: {{ .Values.provision.secretName }}
+          volumeMounts:
+            - name: sql-files
+              mountPath: /sql
+
+      volumes:
+        - name: sql-files
+          emptyDir: {}
+{{- end }}

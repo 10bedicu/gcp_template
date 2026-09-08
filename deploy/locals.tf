@@ -5,6 +5,8 @@ locals {
     project     = "care"
   }
 
+  metabase_etl_commit_sha = var.metabase_etl_repo != null ? jsondecode(data.http.metabase_etl_latest_commit[0].response_body).sha : ""
+
   common_labels = {
     app         = "care"
     environment = var.environment

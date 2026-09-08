@@ -178,3 +178,7 @@ nat_ip_address_name      = "nat-ip-example-app-staging"
 # external_tls_cert         = file("path/to/wildcard.pem")
 # external_tls_key          = file("path/to/wildcard.key")
 # external_tls_base_domains = ["example.org"]
+
+# Metabase ETL provisioning — git repo containing SQL files to run on deploy.
+# metabase_etl_repo    = "your-org/metabase_etl"   # owner/repo (required to enable)
+# metabase_etl_branch  = "main"                     # branch, tag, or commit SHA (default: main)

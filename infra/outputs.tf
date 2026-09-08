@@ -7,6 +7,11 @@ output "gke_dns_endpoint" {
 
 # --- Cloud SQL Outputs ---
 
+output "read_replica_address" {
+  description = "Private IP of the first CARE DB read replica (used by FDW), or null if cloudsql_read_replica_count is 0. The deploy module enforces this prerequisite when Metabase ETL provisioning is enabled."
+  value       = var.cloudsql_read_replica_count > 0 ? module.cloudsql.replicas_instance_first_ip_addresses[0][0].ip_address : null
+}
+
 output "instance_address" {
   description = "IP address of the primary instance"
   value       = module.cloudsql.private_ip_address
