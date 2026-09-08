@@ -35,9 +35,9 @@ Each module directory contains a Makefile with the following targets:
 
 Always pull before making changes. The pull/push scripts fetch the remote secret, show a diff against your local file, and ask for confirmation before writing. The diff is hidden when `CI=true` (GitHub Actions sets this automatically) so secret values never land in CI logs.
 
-- **Pull**: `make pull-tfvars` shows a diff (local → remote) and prompts before overwriting the local file (use `PULL_YES=true` to skip the prompt in CI).
-- **Push**: `make push-tfvars` shows a diff (remote → local) and prompts before uploading a new version (use `PUSH_YES=true` to skip the prompt in CI). It refuses to push if `project_id` in the file does not match the target project.
-- `plan`/`deploy`/`destroy` do NOT auto-pull. Run `make pull-tfvars` yourself first.
+- **Pull**: `make pull-tfvars` shows a diff (local → remote) and prompts before overwriting the local file. The prompt is skipped automatically when `CI=true`.
+- **Push**: `make push-tfvars` shows a diff (remote → local) and prompts before uploading a new version (use `PUSH_YES=true` to skip the prompt in CI). It refuses to push if `project_id` in the file does not match the target project. If the Secret Manager secret does not exist yet, push creates it — so `make push-tfvars` is the required first step in a fresh project.
+- `plan`/`deploy`/`destroy` all depend on `pull-tfvars` and auto-pull before running.
 
 Typical edit flow:
 ```bash
@@ -63,7 +63,7 @@ Set the following before running any target:
 | `infra/` | `infra` |
 | `deploy/` | `deploy-backend` |
 
-> The `deploy/` module runs `tofu plan` with `-lock=false`. All other modules use normal locking.
+> The `infra/` and `deploy/` modules run `tofu plan` with `-lock=false`. `pre-infra/` and `KMS/` use normal locking.
 
 ## Configuration
 
@@ -87,7 +87,9 @@ The root `variables.tf` is symlinked into each module directory. Do not create s
 
 The following optional variables override auto-derived resource names. All default to `null`:
 
-`cluster_name`, `namespace_name`, `vpc_network_name`, `database_subnet_name`, `gke_subnet_name`, `pods_range_name`, `services_range_name`, `gateway_ip_name`, `legacy_ingress_ip_name`, `legacy_fe_ip_name`, `flow_logs_bucket`, `cloudsql_private_ip_name`, `nat_ip_address_name`, `wif_sa_name`
+`cluster_name`, `namespace_name`, `vpc_network_name`, `database_subnet_name`, `gke_subnet_name`, `pods_range_name`, `services_range_name`, `gateway_ip_name`, `legacy_ingress_ip_name`, `legacy_fe_ip_name`, `flow_logs_bucket`, `cloudsql_private_ip_name`, `nat_ip_address_name`, `proxy_only_subnet_name`, `scribe_sa_name`, `wif_sa_name`
+
+> GCP subnet, network, cluster, and static IP names are immutable. Set any override you need **before** the first apply.
 
 ### Feature Flags
 
@@ -100,6 +102,9 @@ Boolean variables control optional infrastructure with `count` or `for_each`:
 | `enable_github_wif` | GitHub Actions Workload Identity Federation |
 | `enable_legacy_ingress` | Legacy GCE Ingress resources |
 | `enable_dns_zone` | Cloud DNS managed zone |
+| `enable_jumphost` | Debian jumphost VM (**defaults to `true`**; creates a public-IP VM with `0.0.0.0/0` SSH and `prevent_destroy`) |
+| `enable_scribe` | Vertex AI scribe service account and exported key |
+| `enable_local_cors` | Adds `http://localhost:4000` to the backend CORS allowlist |
 
 ### Provider Versions
 
@@ -150,7 +155,7 @@ Charts are located under `helm_charts/`. Refer to [.github/instructions/helm.ins
 
 | Component | Description |
 |-----------|-------------|
-| **GKE** | Regional cluster with Gateway API, Workload Identity (`terraform-google-modules/kubernetes-engine/google` ~> 36.3) |
+| **GKE** | Zonal cluster (`regional = false`, `zones = [var.zone]`) with Gateway API, Workload Identity, DNS-only control plane endpoint (`terraform-google-modules/kubernetes-engine/google` ~> 38.0) |
 | **Cloud SQL** | Two PostgreSQL 17 Enterprise instances (primary + Metabase), private IP, optional read replicas |
 | **GCS Buckets** | Three CMEK-encrypted buckets (patient, facility, DICOM) with HMAC access |
 | **Cloud Armor** | Regional security policy with OWASP rules and geo-blocking |
