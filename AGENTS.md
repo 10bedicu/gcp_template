@@ -63,7 +63,7 @@ Set the following before running any target:
 | `infra/` | `infra` |
 | `deploy/` | `deploy-backend` |
 
-> The `infra/` and `deploy/` modules run `tofu plan` with `-lock=false`. `pre-infra/` and `KMS/` use normal locking.
+> All modules use normal state locking.
 
 ## Configuration
 
