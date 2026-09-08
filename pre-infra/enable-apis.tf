@@ -18,6 +18,7 @@ module "project_services" {
       "iam.googleapis.com",
       "secretmanager.googleapis.com",
       "artifactregistry.googleapis.com",
+      "logging.googleapis.com",
     ],
     # --- Conditional ---
     var.enable_dns_zone ? [

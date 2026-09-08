@@ -19,10 +19,11 @@ module "kms" {
   project_id = var.project_id
   keyring    = "${var.org}-${var.app}-${var.environment}-keyring"
   location   = var.region
-  keys       = ["patient-key", "facility-key", "dicom-key"]
+  keys       = ["patient-key", "facility-key", "dicom-key", "logs-key"]
 
-  set_owners_for = ["patient-key", "facility-key", "dicom-key"]
+  set_owners_for = ["patient-key", "facility-key", "dicom-key", "logs-key"]
   owners = [
+    "serviceAccount:${var.service_account_email}",
     "serviceAccount:${var.service_account_email}",
     "serviceAccount:${var.service_account_email}",
     "serviceAccount:${var.service_account_email}",

@@ -63,6 +63,7 @@ enable_legacy_ingress = false
 enable_local_cors     = false
 enable_cloud_armor    = true
 enable_github_wif     = false
+enable_log_export     = true
 enable_scribe         = false
 enable_jumphost       = true
 
@@ -168,9 +169,9 @@ services_range_name      = "gke-services-range"
 gateway_ip_name          = "care-pip-example-app-staging"
 legacy_ingress_ip_name   = "care-pip"
 legacy_fe_ip_name        = "care-fe"
-flow_logs_bucket         = "example-org-staging-vpc-flow-logs"
 cloudsql_private_ip_name = "cloudsql-private-ip"
 nat_ip_address_name      = "nat-ip-example-app-staging"
+# logs_bucket            = null  # uses default: {org}-{environment}-{app}-logs
 
 # External wildcard TLS certificate (optional).
 # When provided, the Gateway uses this cert for domains matching the base domains.

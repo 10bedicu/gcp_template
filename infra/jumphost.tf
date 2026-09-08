@@ -94,4 +94,8 @@ resource "google_compute_firewall" "jumphost_ssh" {
 
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["jumphost-${var.app}-${var.environment}"]
+
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
 }

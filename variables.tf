@@ -438,10 +438,16 @@ variable "legacy_fe_ip_name" {
   default     = null
 }
 
-variable "flow_logs_bucket" {
-  description = "Override for VPC flow logs bucket name"
+variable "logs_bucket" {
+  description = "Override for the logs GCS bucket name"
   type        = string
   default     = null
+}
+
+variable "enable_log_export" {
+  description = "Enable log export to regional Cloud Logging bucket and GCS for data residency and indefinite retention"
+  type        = bool
+  default     = true
 }
 
 variable "cloudsql_private_ip_name" {

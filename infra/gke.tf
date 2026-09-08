@@ -9,7 +9,7 @@ module "gke_cluster" {
   zones               = [var.zone]
   network             = module.vpc.network_name
   subnetwork          = local.gke_subnet_name
-  deletion_protection = false
+  deletion_protection = true
   ip_range_pods       = google_compute_global_address.pods_range.name
   cluster_resource_labels = {
     billing = "gke-cluster"
@@ -24,6 +24,9 @@ module "gke_cluster" {
 
   # Enable Gateway API for regional external Application Load Balancer
   gateway_api_channel = "CHANNEL_STANDARD"
+
+  # Explicit logging configuration
+  logging_service = "logging.googleapis.com/kubernetes"
 
   # release channel
   release_channel = "STABLE"

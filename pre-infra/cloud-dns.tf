@@ -11,7 +11,8 @@ module "dns_zone_tofu" {
     environment = var.environment
     app         = var.app
   }
-  type = "public"
+  type           = "public"
+  enable_logging = true
 
   depends_on = [module.project_services]
 }
