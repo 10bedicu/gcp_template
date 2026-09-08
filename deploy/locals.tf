@@ -51,7 +51,7 @@ locals {
   config_map_data = merge({
     POSTGRES_PORT                                 = 5432
     DJANGO_SECURE_SSL_REDIRECT                    = "False"
-    DJANGO_SETTINGS_MODULE                        = "config.settings.production"
+    DJANGO_SETTINGS_MODULE                        = "config.settings.production_logging"
     BUCKET_PROVIDER                               = "gcp"
     BUCKET_REGION                                 = var.region
     CSRF_TRUSTED_ORIGINS                          = jsonencode(concat([for d in var.web_domain_name : "https://${d}"], [for d in var.api_domain_name : "https://${d}"]))
