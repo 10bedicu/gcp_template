@@ -7,7 +7,11 @@ metadata:
     {{- include "care-be.labels" . | nindent 4 }}
     app.kubernetes.io/component: api
 spec:
+  strategy:
+    {{- toYaml (.Values.api.strategy | default (dict "type" "RollingUpdate")) | nindent 4 }}
+  {{- if not .Values.api.autoscaling.enabled }}
   replicas: {{ .Values.api.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "care-be.selectorLabels" . | nindent 6 }}
@@ -29,6 +33,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "care-be.serviceAccountName" . }}
+      terminationGracePeriodSeconds: {{ .Values.api.terminationGracePeriodSeconds | default 60 }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -147,4 +152,3 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}
-

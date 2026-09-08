@@ -11,11 +11,11 @@ Modules must be applied in the following order:
 | Order | Module | Purpose |
 |-------|--------|---------|
 | 1 | `pre-infra/` | Project bootstrap: API enablement, optional DNS zone |
-| 2 | `infra/` | VPC, GKE, Cloud SQL, GCS buckets, Cloud Armor, GitHub WIF |
-| 3 | `KMS/` | Key ring, encryption keys, and application secrets (`django_secret_key`, `django_admin_password`, `metabase_encryption_secret_key` via `random_password`) |
+| 2 | `KMS/` | Key ring, encryption keys, and application secrets (`django_secret_key`, `django_admin_password`, `metabase_encryption_secret_key` via `random_password`) |
+| 3 | `infra/` | VPC, GKE, Cloud SQL, GCS buckets, Cloud Armor, GitHub WIF |
 | 4 | `deploy/` | Kubernetes namespace, secrets, Helm releases |
 
-The `deploy/` module reads remote state from `infra` (prefix `infra`) and `KMS` (prefix `keys`) via `terraform_remote_state` data sources in `deploy/init.tf`.
+The `infra/` module references KMS keys created by `KMS/`. The `deploy/` module reads remote state from `infra` (prefix `infra`) and `KMS` (prefix `keys`) via `terraform_remote_state` data sources in `deploy/init.tf`.
 
 ## Build and Deploy
 
@@ -24,12 +24,27 @@ Each module directory contains a Makefile with the following targets:
 | Target | Description |
 |--------|-------------|
 | `make init` | Initialize OpenTofu with GCS backend |
-| `make pull-tfvars` | Pull tfvars from Secret Manager |
+| `make pull-tfvars` | Pull tfvars from Secret Manager (shows a diff, asks to confirm) |
+| `make push-tfvars` | Push local tfvars to Secret Manager (shows a diff, asks to confirm) |
 | `make plan` | Generate an execution plan |
 | `make deploy` | Apply infrastructure changes |
 | `make destroy` | Tear down resources |
 | `make lint` | Format files recursively |
-| `make push-tfvars` | Push local tfvars to Secret Manager |
+
+#### Tfvars Workflow
+
+Always pull before making changes. The pull/push scripts fetch the remote secret, show a diff against your local file, and ask for confirmation before writing. The diff is hidden when `CI=true` (GitHub Actions sets this automatically) so secret values never land in CI logs.
+
+- **Pull**: `make pull-tfvars` shows a diff (local → remote) and prompts before overwriting the local file (use `PULL_YES=true` to skip the prompt in CI).
+- **Push**: `make push-tfvars` shows a diff (remote → local) and prompts before uploading a new version (use `PUSH_YES=true` to skip the prompt in CI). It refuses to push if `project_id` in the file does not match the target project.
+- `plan`/`deploy`/`destroy` do NOT auto-pull. Run `make pull-tfvars` yourself first.
+
+Typical edit flow:
+```bash
+make pull-tfvars          # review diff, confirm, pull latest from Secret Manager
+# edit the local .tfvars file
+make push-tfvars          # review diff, confirm, push
+```
 
 ### Required Environment Variables
 
@@ -44,8 +59,8 @@ Set the following before running any target:
 | Module | Prefix |
 |--------|--------|
 | `pre-infra/` | `pre-infra` |
-| `infra/` | `infra` |
 | `KMS/` | `keys` |
+| `infra/` | `infra` |
 | `deploy/` | `deploy-backend` |
 
 > The `deploy/` module runs `tofu plan` with `-lock=false`. All other modules use normal locking.
@@ -72,7 +87,7 @@ The root `variables.tf` is symlinked into each module directory. Do not create s
 
 The following optional variables override auto-derived resource names. All default to `null`:
 
-`cluster_name`, `namespace_name`, `vpc_network_name`, `database_subnet_name`, `gke_subnet_name`, `pods_range_name`, `services_range_name`, `gateway_ip_name`, `legacy_ingress_ip_name`, `legacy_fe_ip_name`, `flow_logs_bucket`, `cloudsql_private_ip_name`, `nat_ip_address_name`
+`cluster_name`, `namespace_name`, `vpc_network_name`, `database_subnet_name`, `gke_subnet_name`, `pods_range_name`, `services_range_name`, `gateway_ip_name`, `legacy_ingress_ip_name`, `legacy_fe_ip_name`, `flow_logs_bucket`, `cloudsql_private_ip_name`, `nat_ip_address_name`, `wif_sa_name`
 
 ### Feature Flags
 
@@ -111,14 +126,15 @@ When provided, cert-manager only issues certificates for domains NOT covered by 
 
 ### Helm Config Variable Shape
 
-`var.helm_config` is a `map(map(string))` with the following expected keys:
+`var.helm_config` is an object containing non-DICOM image settings plus optional replica, resource, and rollout overrides. Resource overrides must be complete Kubernetes resource blocks; use `limits.cpu = null` to explicitly remove a CPU limit.
 
 ```hcl
 helm_config = {
-  care_backend  = { repository = "...", tag = "..." }
-  care_frontend = { repository = "...", tag = "..." }
-  metabase      = { repository = "...", tag = "..." }
-  redis         = { repository = "...", tag = "..." }
+  deployment_strategy = "Recreate"
+  care_backend  = { repository = "...", tag = "...", api_replica_count = 1 }
+  care_frontend = { repository = "...", tag = "...", replica_count = 1 }
+  metabase      = { repository = "...", tag = "...", replica_count = 1 }
+  redis         = { repository = "...", tag = "...", replica_count = 1 }
 }
 ```
 

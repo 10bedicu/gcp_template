@@ -15,6 +15,7 @@ replicaCount: 2
 api:
   enabled: true
   replicaCount: 2
+  terminationGracePeriodSeconds: 60
   command:
     - /app/start.sh
   service:
@@ -24,18 +25,18 @@ api:
     annotations: {}
   resources:
     limits:
-      cpu: 1000m
-      memory: 3Gi
+      cpu: 1500m
+      memory: 2Gi
     requests:
       cpu: 500m
-      memory: 2Gi
+      memory: 1Gi
   # Health check configuration
   livenessProbe:
     enabled: true
     httpGet:
-      path: /health/
+      path: /ping/
       port: http
-    initialDelaySeconds: 70
+    initialDelaySeconds: 100
     periodSeconds: 10
     timeoutSeconds: 20
     failureThreshold: 5
@@ -44,14 +45,14 @@ api:
     httpGet:
       path: /ping/
       port: http
-    initialDelaySeconds: 70
+    initialDelaySeconds: 100
     periodSeconds: 10
     timeoutSeconds: 20
     failureThreshold: 5
   autoscaling:
     enabled: false
     minReplicas: 2
-    maxReplicas: 10
+    maxReplicas: 6
     targetCPUUtilizationPercentage: 80
   podAnnotations: {}
   tolerations: []
@@ -62,16 +63,22 @@ api:
 celeryWorker:
   enabled: true
   replicaCount: 1
+  terminationGracePeriodSeconds: 60
   command:
     - /app/celery_worker.sh
   podAnnotations: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 80
   resources:
     limits:
-      cpu: 500m
-      memory: 3Gi
+      cpu: 1500m
+      memory: 2Gi
     requests:
-      cpu: 250m
-      memory: 1Gi
+      cpu: 500m
+      memory: 512Mi
 
 # Celery Beat configuration
 celeryBeat:
@@ -248,7 +255,7 @@ backendPolicy:
     healthyThreshold: 1
     unhealthyThreshold: 3
     port: 9000
-    path: /health/
+    path: /ping/
 
 httpRoute:
   enabled: "{{ .Values.global.httpRoute.enabled }}"

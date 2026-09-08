@@ -21,7 +21,7 @@ registry:
 image:
   repository: metabase/metabase  # Image name in the registry
   pullPolicy: IfNotPresent
-  tag: "latest"
+  tag: "v0.63.13"
 
 # Command to start the container
 command: []

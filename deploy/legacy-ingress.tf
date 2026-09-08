@@ -89,7 +89,7 @@ resource "kubernetes_manifest" "backend_config" {
         unhealthyThreshold = 3
         port               = 9000
         type               = "HTTP"
-        requestPath        = "/health/"
+        requestPath        = "/ping/"
       }
     }
   }

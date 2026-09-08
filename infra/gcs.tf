@@ -60,6 +60,11 @@ module "dicom_bucket" {
   project_id = var.project_id
   location   = var.region
   names      = [local.dicom_bucket_name]
+
+  depends_on = [
+    google_kms_crypto_key_iam_member.storage_sa_dicom,
+    google_kms_crypto_key_iam_member.writer_sa_dicom,
+  ]
   labels = merge(
     local.tags,
     {
@@ -94,6 +99,11 @@ module "patient_bucket" {
   project_id = var.project_id
   location   = var.region
   names      = [local.patient_bucket_name]
+
+  depends_on = [
+    google_kms_crypto_key_iam_member.storage_sa_patient,
+    google_kms_crypto_key_iam_member.writer_sa_patient,
+  ]
   labels = merge(
     local.tags,
     {
@@ -124,6 +134,11 @@ module "facility_bucket" {
   project_id = var.project_id
   location   = var.region
   names      = [local.facility_bucket_name]
+
+  depends_on = [
+    google_kms_crypto_key_iam_member.storage_sa_facility,
+    google_kms_crypto_key_iam_member.writer_sa_facility,
+  ]
   labels = merge(
     local.tags,
     {

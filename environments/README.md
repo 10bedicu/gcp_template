@@ -59,11 +59,11 @@ export ENV_NAME="<environment-name>"
    make init BACKEND_BUCKET=<state-bucket>
    make plan PROJECT_ID=<gcp-project> ENV_NAME=<env> BACKEND_BUCKET=<state-bucket>
 
-   cd ../infra
+   cd ../KMS
    make init BACKEND_BUCKET=<state-bucket>
    make plan PROJECT_ID=<gcp-project> ENV_NAME=<env> BACKEND_BUCKET=<state-bucket>
 
-   cd ../KMS
+   cd ../infra
    make init BACKEND_BUCKET=<state-bucket>
    make plan PROJECT_ID=<gcp-project> ENV_NAME=<env> BACKEND_BUCKET=<state-bucket>
 
@@ -139,7 +139,7 @@ The source of truth for all variables is the root `variables.tf`.
 | Variable | Type | Default | Example |
 |----------|------|---------|---------|
 | `jwks_base64` | `string` | `""` | `"CHANGE_ME_BASE64_JWKS"` |
-| `helm_config` | `object({ care_backend = object({ repository = string, tag = string, api_replica_count = optional(number, 2), celery_worker_replica_count = optional(number, 1) }), care_frontend = object({ repository = string, tag = string }), metabase = object({ repository = string, tag = string }), redis = object({ repository = string, tag = string }) })` | n/a | Helm image/release config per service. `care_backend.api_replica_count` (default `2`) and `care_backend.celery_worker_replica_count` (default `1`) are optional. |
+| `helm_config` | `object` | n/a | Helm images, replicas, validated complete per-workload resource overrides, and non-DICOM deployment strategy. Set `limits.cpu = null` to remove CPU limits. |
 | `additional_secrets` | `map(string)` | `{}` | Non-sensitive placeholders only |
 | `additional_config_map_data` | `map(string)` | `{}` | Application config overrides |
 | `additional_plugs` | `string` | `"[]"` | JSON-encoded plugin manifest; overwritten by the deploy pipeline from `build/care/care.env` on every run (edit it there, not in tfvars) |

@@ -1,8 +1,9 @@
 # Helm Chart for Gateway Deployment
 resource "helm_release" "gateway" {
-  name      = "gateway"
-  chart     = "${path.module}/../helm_charts/gateway"
-  namespace = local.namespace_name
+  name        = "gateway"
+  chart       = "${path.module}/../helm_charts/gateway"
+  namespace   = local.namespace_name
+  max_history = 10
   # create_namespace = true
 
   values = [
@@ -29,6 +30,7 @@ resource "helm_release" "cert_manager" {
   version          = "v1.19.4"
   namespace        = "cert-manager"
   create_namespace = true
+  max_history      = 10
 
   # Install CRDs (Certificate, ClusterIssuer, etc.)
   set {
@@ -65,9 +67,10 @@ resource "helm_release" "cert_manager" {
 
 # Helm Chart for Redis Deployment
 resource "helm_release" "redis" {
-  name      = "redis"
-  chart     = "${path.module}/../helm_charts/redis"
-  namespace = local.namespace_name
+  name        = "redis"
+  chart       = "${path.module}/../helm_charts/redis"
+  namespace   = local.namespace_name
+  max_history = 10
   # create_namespace = true
 
   values = [
@@ -80,10 +83,11 @@ resource "helm_release" "redis" {
 }
 # Helm Chart for Metabase Deployment
 resource "helm_release" "metabase" {
-  name      = "metabase"
-  chart     = "${path.module}/../helm_charts/metabase"
-  namespace = local.namespace_name
-  timeout   = 420
+  name        = "metabase"
+  chart       = "${path.module}/../helm_charts/metabase"
+  namespace   = local.namespace_name
+  timeout     = 420
+  max_history = 10
   # create_namespace = true
 
   values = [
@@ -103,10 +107,11 @@ resource "helm_release" "metabase" {
 
 # Helm Chart for Care Backend Deployment
 resource "helm_release" "care_backend" {
-  name      = "care-backend"
-  chart     = "${path.module}/../helm_charts/care_be"
-  namespace = local.namespace_name
-  timeout   = 420
+  name        = "care-backend"
+  chart       = "${path.module}/../helm_charts/care_be"
+  namespace   = local.namespace_name
+  timeout     = 420
+  max_history = 10
   # recreate_pods    = true 
   # create_namespace = true
 
@@ -125,9 +130,10 @@ resource "helm_release" "care_backend" {
 }
 # Helm Chart for Care Frontend Deployment
 resource "helm_release" "care_frontend" {
-  name      = "care-frontend"
-  chart     = "${path.module}/../helm_charts/care_fe"
-  namespace = local.namespace_name
+  name        = "care-frontend"
+  chart       = "${path.module}/../helm_charts/care_fe"
+  namespace   = local.namespace_name
+  max_history = 10
   # create_namespace = true
 
   values = [
@@ -144,11 +150,12 @@ resource "helm_release" "care_frontend" {
 }
 
 resource "helm_release" "dcm4chee" {
-  count     = var.enable_dicom ? 1 : 0
-  name      = "dcm4chee"
-  chart     = "${path.module}/../helm_charts/dcm4chee"
-  namespace = local.namespace_name
-  timeout   = 600
+  count       = var.enable_dicom ? 1 : 0
+  name        = "dcm4chee"
+  chart       = "${path.module}/../helm_charts/dcm4chee"
+  namespace   = local.namespace_name
+  timeout     = 600
+  max_history = 10
 
   values = [
     yamlencode(merge(local.common_helm_values, local.dcm4chee_values, { chartHash = local.chart_hashes.dcm4chee })),
