@@ -30,6 +30,23 @@ module "gke_cluster" {
 
   # Required by PodMonitoring resources used for application metrics.
   monitoring_enable_managed_prometheus = true
+  monitoring_enabled_components = [
+    "SYSTEM_COMPONENTS",
+    "STORAGE",
+    "HPA",
+    "POD",
+    "DAEMONSET",
+    "DEPLOYMENT",
+    "STATEFULSET",
+    "CADVISOR",
+    "KUBELET",
+    "DCGM",
+    "JOBSET",
+  ]
+  logging_enabled_components = [
+    "SYSTEM_COMPONENTS",
+    "WORKLOADS",
+  ]
 
   # → enable GKE Metadata Server for Workload Identity
   node_metadata = "GKE_METADATA_SERVER"
