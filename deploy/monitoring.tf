@@ -56,26 +56,26 @@ resource "google_monitoring_alert_policy" "care_queue_length" {
   count   = var.helm_config.care_metrics_exporter.enabled ? 1 : 0
   project = var.project_id
 
-  display_name          = "CARE Celery queue above 250 - ${var.environment}"
+  display_name          = "CARE Celery queue above 200 - ${var.environment}"
   combiner              = "OR"
   enabled               = true
   severity              = "WARNING"
   notification_channels = [for channel in google_monitoring_notification_channel.email : channel.name]
 
   conditions {
-    display_name = "Celery queue length is greater than 250"
+    display_name = "Celery queue length is greater than 200"
     condition_prometheus_query_language {
-      query               = "${local.celery_queue_length_query} > 250"
+      query               = "${local.celery_queue_length_query} > 200"
       duration            = "300s"
       evaluation_interval = "60s"
-      alert_rule          = "CareCeleryQueueAbove250"
+      alert_rule          = "CareCeleryQueueAbove200"
       rule_group          = "care-metrics-exporter"
     }
   }
 
   documentation {
     mime_type = "text/markdown"
-    content   = "The CARE Celery queue has remained above 250 ready messages for five minutes in `${var.environment}`. Check worker health and whether the queue is draining."
+    content   = "The CARE Celery queue has remained above 200 ready messages for five minutes in `${var.environment}`. Check worker health and whether the queue is draining."
   }
 
   alert_strategy {

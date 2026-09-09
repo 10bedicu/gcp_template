@@ -115,7 +115,7 @@ helm_config = {
 monitoring_notification_emails = ["care-ops@example.org"]
 ```
 
-The exporter reads only `CELERY_BROKER_URL` from the existing CARE backend Secret. Google Managed Service for Prometheus scrapes it through a namespaced `PodMonitoring`; no self-hosted Prometheus or Prometheus Operator is installed. OpenTofu creates a CARE application dashboard containing Celery queue depth and an alert when the `celery` queue remains above 250 messages for five minutes. Queue depth measures waiting work only, not active or reserved Celery tasks.
+The exporter reads only `CELERY_BROKER_URL` from the existing CARE backend Secret. Google Managed Service for Prometheus scrapes it through a namespaced `PodMonitoring`; no self-hosted Prometheus or Prometheus Operator is installed. OpenTofu creates a CARE application dashboard containing Celery queue depth and an alert when the `celery` queue remains above 200 messages for five minutes. Queue depth measures waiting work only, not active or reserved Celery tasks.
 
 ## Security
 
