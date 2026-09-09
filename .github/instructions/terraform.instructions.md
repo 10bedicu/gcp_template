@@ -79,7 +79,7 @@ GCS backend with the following prefixes:
 | `infra/` | `infra` |
 | `deploy/` | `deploy-backend` |
 
-The `deploy/` module runs `tofu plan` with `-lock=false`. All other modules lock normally.
+All modules use normal state locking.
 
 ## Adding Secrets
 
