@@ -48,6 +48,24 @@ export PROJECT_ID="<your-gcp-project-id>"
 export ENV_NAME="<environment-name>"
 ```
 
+### Managing Multiple Environments
+
+This single repository manages multiple environments; only the three variables
+above change between them. Clone the repo into one directory per environment
+and use [direnv](https://direnv.net/) to scope the variables to each clone:
+
+```bash
+git clone <repo-url> care-gcp-staging
+cd care-gcp-staging
+cp .envrc.sample .envrc
+# edit .envrc with this environment's values
+direnv allow
+```
+
+Everything else (tfvars) is pulled from Secret Manager per `ENV_NAME`, so no
+other per-clone configuration is needed. `.envrc` is gitignored — never commit
+it.
+
 ## Common Commands
 
 Run from any module directory (`pre-infra/`, `infra/`, `KMS/`, `deploy/`):

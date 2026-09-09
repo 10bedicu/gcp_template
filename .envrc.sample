@@ -1,0 +1,12 @@
+# Sample direnv config for a single environment clone.
+#
+# This repo manages multiple environments from one codebase: clone it into a
+# separate directory per environment, copy this file to .envrc there, fill in
+# the values below, then run `direnv allow`.
+#
+# Everything else (tfvars) is pulled from Secret Manager per ENV_NAME - do not
+# add environment-specific values anywhere other than these three exports.
+
+export BACKEND_BUCKET="<your-state-bucket>"
+export PROJECT_ID="<your-gcp-project-id>"
+export ENV_NAME="<environment-name>"

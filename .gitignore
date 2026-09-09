@@ -47,3 +47,5 @@ key.json
 .DS_Store
 tmp/
 deploy/generated_values
+
+.envrc
