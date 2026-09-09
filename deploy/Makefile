@@ -45,7 +45,7 @@ init:
 		-backend-config="prefix=$(BACKEND_PREFIX)"
 
 plan: pull-tfvars
-	@tofu plan -lock=false $(TFVARS_ARGS)
+	@tofu plan $(TFVARS_ARGS)
 
 deploy: pull-tfvars
 	@tofu apply $(APPROVE_FLAG) $(TFVARS_ARGS)

@@ -82,7 +82,7 @@ The source of truth for all variables is the root `variables.tf`.
 |----------|------|---------|---------|
 | `project_id` | `string` | — | `"example-project-id"` |
 | `project_number` | `string` | `null` | `"123456789012"` |
-| `region` | `string` | `"us-central1"` | `"asia-south1"` |
+| `region` | `string` | `"asia-south1"` | `"asia-south1"` |
 | `org` | `string` | `"ohn"` | `"example-org"` |
 | `app` | `string` | — | `"example-app"` |
 | `environment` | `string` | `"prod"` | `"staging"` |
@@ -117,12 +117,13 @@ The source of truth for all variables is the root `variables.tf`.
 
 | Variable | Type | Default | Example |
 |----------|------|---------|---------|
-| `cloudsql_tier` | `string` | `null` | `"db-custom-2-3840"` |
-| `cloudsql_disk_size` | `any` | `null` | `10` |
-| `cloudsql_read_replica_count` | `any` | `0` | `1` |
-| `cloudsql_read_replica_tier` | `string` | `null` | `"db-custom-1-3840"` |
-| `metabase_cloudsql_tier` | `string` | `null` | `"db-f1-micro"` |
-| `metabase_cloudsql_disk_size` | `any` | `null` | `10` |
+| `cloudsql_tier` | `string` | `"db-custom-2-3840"` | `"db-custom-2-3840"` |
+| `cloudsql_availability_type` | `string` | `"ZONAL"` | `"REGIONAL"` |
+| `cloudsql_disk_size` | `any` | `10` | `10` |
+| `cloudsql_read_replica_count` | `any` | `1` | `1` |
+| `cloudsql_read_replica_tier` | `string` | `"db-custom-1-3840"` | `"db-custom-1-3840"` |
+| `metabase_cloudsql_tier` | `string` | `"db-f1-micro"` | `"db-f1-micro"` |
+| `metabase_cloudsql_disk_size` | `any` | `10` | `10` |
 
 ### Feature Flags
 
@@ -132,6 +133,9 @@ The source of truth for all variables is the root `variables.tf`.
 | `enable_dicom` | `bool` | `false` | `false` |
 | `enable_legacy_ingress` | `bool` | `false` | `false` |
 | `enable_github_wif` | `bool` | `false` | `true` |
+| `enable_jumphost` | `bool` | `true` | `true` |
+| `enable_local_cors` | `bool` | `false` | `false` |
+| `enable_scribe` | `bool` | `false` | `false` |
 | `github_repo` | `string` | `""` | `"example-org/example-repo"` |
 
 ### Application Configuration
@@ -165,3 +169,6 @@ All default to `null`, allowing auto-derived names.
 | `flow_logs_bucket` | `string` |
 | `cloudsql_private_ip_name` | `string` |
 | `nat_ip_address_name` | `string` |
+| `proxy_only_subnet_name` | `string` |
+| `scribe_sa_name` | `string` |
+| `wif_sa_name` | `string` |
