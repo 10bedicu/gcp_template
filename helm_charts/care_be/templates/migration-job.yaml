@@ -108,9 +108,13 @@ spec:
           {{- end }}
           resources:
             {{- toYaml (.Values.migrationJob.resources | default .Values.resources) | nindent 12 }}
-          {{- if .Values.volumeMounts }}
           volumeMounts:
-            {{- toYaml .Values.volumeMounts | nindent 12 }}
+            - name: production-logging
+              mountPath: /app/config/settings/production_logging.py
+              subPath: production_logging.py
+              readOnly: true
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -124,9 +128,12 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.volumes }}
       volumes:
-        {{- toYaml .Values.volumes | nindent 8 }}
+        - name: production-logging
+          configMap:
+            name: {{ include "care-be.fullname" . }}-production-logging
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}
 
