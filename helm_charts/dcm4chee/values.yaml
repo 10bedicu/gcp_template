@@ -10,6 +10,10 @@ global:
   backendPolicy:
     enabled: false
     securityPolicy: ""
+    logging:
+      enabled: false
+      # Integer between 0 and 1000000; GKE divides it by 1000000.
+      sampleRate: 100000
   httpRoute:
     enabled: false
 

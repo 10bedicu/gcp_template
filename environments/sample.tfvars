@@ -66,6 +66,13 @@ enable_github_wif     = false
 enable_scribe         = false
 enable_jumphost       = true
 
+# Gateway backend access logging (opt-in). Access logs capture full request
+# URLs, which may contain patient identifiers -- enable only after reviewing
+# log retention and IAM access. sample_rate is an integer between 0 and
+# 1000000; GKE divides it by 1000000 (1000000 = log all, 100000 = 10%).
+enable_backend_access_logging = false
+backend_logging_sample_rate   = 100000
+
 # Service account used by workloads/automation where applicable.
 service_account_email = "iac-tofu@example-project-id.iam.gserviceaccount.com"
 

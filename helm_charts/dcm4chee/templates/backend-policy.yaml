@@ -11,6 +11,11 @@ spec:
     timeoutSec: {{ .Values.backendPolicy.timeoutSec }}
     connectionDraining:
       drainingTimeoutSec: {{ .Values.backendPolicy.drainingTimeoutSec }}
+    logging:
+      enabled: {{ .Values.global.backendPolicy.logging.enabled }}
+      {{- if .Values.global.backendPolicy.logging.enabled }}
+      sampleRate: {{ .Values.global.backendPolicy.logging.sampleRate | int }}
+      {{- end }}
   targetRef:
     group: ""
     kind: Service

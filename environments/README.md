@@ -133,10 +133,14 @@ The source of truth for all variables is the root `variables.tf`.
 | `enable_dicom` | `bool` | `false` | `false` |
 | `enable_legacy_ingress` | `bool` | `false` | `false` |
 | `enable_github_wif` | `bool` | `false` | `true` |
+| `enable_backend_access_logging` | `bool` | `false` | `true` |
+| `backend_logging_sample_rate` | `number` | `100000` | `500000` |
 | `enable_jumphost` | `bool` | `true` | `true` |
 | `enable_local_cors` | `bool` | `false` | `false` |
 | `enable_scribe` | `bool` | `false` | `false` |
 | `github_repo` | `string` | `""` | `"example-org/example-repo"` |
+
+> `enable_backend_access_logging` turns on Cloud Logging access logs for every Gateway backend service (CARE backend, CARE frontend, Metabase, DICOM). It is **opt-in** because these logs record the full request URL, including query strings that may contain patient identifiers — enable it only after reviewing log retention and who holds `roles/logging.viewer` on the project. `backend_logging_sample_rate` applies only when logging is enabled and must be an integer between `0` and `1000000`; GKE divides it by `1000000` to derive the logged proportion (`1000000` = all requests, `500000` = 50%, `100000` = 10%). Log volume and cost scale directly with this value.
 
 ### Application Configuration
 

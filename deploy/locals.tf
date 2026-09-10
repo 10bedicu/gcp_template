@@ -110,6 +110,10 @@ locals {
       backendPolicy = {
         enabled        = true
         securityPolicy = data.terraform_remote_state.infra.outputs.security_policy_name
+        logging = {
+          enabled    = var.enable_backend_access_logging
+          sampleRate = var.backend_logging_sample_rate
+        }
       }
       httpRoute = {
         enabled = true
