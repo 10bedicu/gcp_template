@@ -1,0 +1,627 @@
+% =============================================================================
+% CARE Infrastructure Requirement Specification -- CARE Deployment
+% -----------------------------------------------------------------------------
+% Reusable, provider-agnostic template.
+%
+% HOW TO CUSTOMISE
+%   Every deployment-specific value is a macro defined once in the
+%   CONFIGURATION block below and referenced throughout the document.
+%   1. DEFAULTS   -- every macro has a sensible default (\providecommand).
+%                    Do NOT edit the defaults; the template stays reusable.
+%   2. OVERRIDES  -- to change a value, copy its line into the OVERRIDES
+%                    block (or into spec-overrides.tex) and change
+%                    \providecommand to \newcommand. Overrides always win
+%                    because they are defined first.
+%   Values whose default renders as a red [placeholder] MUST be overridden
+%   for a final document; everything else is optional.
+%
+% Compile with pdflatex (Overleaf default works fine).
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+% Inline placeholder marker (red = value still needs to be provided)
+\newcommand{\ph}[1]{\textcolor{red!70!black}{\texttt{[#1]}}}
+
+% =============================================================================
+% CONFIGURATION
+% =============================================================================
+
+% -----------------------------------------------------------------------------
+% 1. OVERRIDES -- per-deployment values. Uncomment / add \newcommand lines
+%    here, or keep them in a separate spec-overrides.tex next to this file.
+% -----------------------------------------------------------------------------
+\InputIfFileExists{spec-overrides.tex}{}{}
+
+% \newcommand{\OrgName}{E-Gov}
+% \newcommand{\ProjectName}{CARE HMIS}
+% \newcommand{\DataCenterName}{Manipur State Data Center}
+% \newcommand{\RegionLocation}{Manipur, India}
+% \newcommand{\BaseDomain}{care.mn.gov.in}
+% \newcommand{\DocDate}{20 August 2026}
+% \newcommand{\DocOwner}{Jane Doe, jane@example.org}
+% \newcommand{\KubeNodeCount}{10}
+
+% -----------------------------------------------------------------------------
+% 2. DEFAULTS -- one line per value. \providecommand is skipped when the
+%    macro was already defined in the OVERRIDES block above.
+% -----------------------------------------------------------------------------
+
+% --- Document metadata -------------------------------------------------------
+\providecommand{\OrgName}{\ph{ORGANISATION NAME}}
+\providecommand{\ProjectName}{\ph{PROJECT NAME}}
+\providecommand{\DataCenterName}{\ph{STATE DATA CENTER NAME}}
+\providecommand{\DocVersion}{0.1 (Draft)}
+\providecommand{\DocDate}{\today}
+\providecommand{\DocOwner}{\ph{DOCUMENT OWNER / CONTACT}}
+\providecommand{\DocAuthor}{\ph{Author}}
+
+% --- Environment identity ----------------------------------------------------
+\providecommand{\BaseDomain}{\ph{care.example.com}}   % wildcard DNS/TLS base domain
+\providecommand{\EnvName}{\ph{staging / production}}
+\providecommand{\RegionLocation}{\ph{region / location}}
+
+% --- Kubernetes cluster ------------------------------------------------------
+\providecommand{\KubeVersion}{1.35 or later}
+\providecommand{\ControlPlaneSla}{99.99\%}
+\providecommand{\KubeNodeCount}{7}    % integers only: totals are computed
+\providecommand{\KubeNodeCpu}{8}      % vCPU per node (integer)
+\providecommand{\KubeNodeRam}{16}     % GB per node (integer)
+\providecommand{\KubeNodeDisk}{128 GB}
+
+% --- Database cluster --------------------------------------------------------
+\providecommand{\PgVersion}{17}
+\providecommand{\DbNodeCount}{3}      % integers only: totals are computed
+\providecommand{\DbNodeCpu}{8}        % vCPU per node (integer)
+\providecommand{\DbNodeRam}{32}       % GB per node (integer)
+\providecommand{\DbNodeDisk}{1 TB}
+\providecommand{\ReadReplicaCount}{1}
+\providecommand{\DbFailoverRto}{5 minutes}
+\providecommand{\ReplicationLagThreshold}{30 seconds}
+\providecommand{\DbBackupRetention}{30 days}
+\providecommand{\DbBackupFrequency}{daily full + continuous WAL archiving}
+\providecommand{\RestoreTestSchedule}{quarterly}
+\providecommand{\DbMaintenanceWindow}{\ph{maintenance window}}
+
+% --- Storage -----------------------------------------------------------------
+\providecommand{\ObjectStorageCapacity}{1 TB}
+
+% --- Security / compliance ---------------------------------------------------
+\providecommand{\WafPolicy}{\ph{applicable policy}}
+\providecommand{\RbacRoles}{cluster-admin, deployer, read-only auditor}
+\providecommand{\AuditLogRetention}{365 days}
+\providecommand{\ComplianceStandards}{CIS Kubernetes Benchmarks and applicable
+  industry/state standards \ph{e.g.\ MeitY guidelines, ISO 27001}}
+\providecommand{\FlowLogRetention}{90 days}
+
+% --- Observability / DR ------------------------------------------------------
+\providecommand{\AlertChannel}{\ph{email / chat / on-call tool}}
+\providecommand{\ClusterRpo}{15 minutes}
+\providecommand{\ClusterRto}{4 hours}
+\providecommand{\DrDrillFrequency}{annually}
+
+% --- CI/CD -------------------------------------------------------------------
+\providecommand{\CicdTool}{\ph{GitHub Actions / GitLab CI / other}}
+\providecommand{\ContainerRegistry}{\ph{to be assigned}}
+
+% --- AI services -------------------------------------------------------------
+\providecommand{\AiTextContext}{256k}
+\providecommand{\AiTextOutput}{16k}
+\providecommand{\AiMmluPro}{75\%}
+\providecommand{\AiIfEval}{85\%}
+\providecommand{\AiGpqa}{60\%}
+\providecommand{\AiMmmu}{65\%}
+\providecommand{\AiAudioMinutes}{30 minutes}
+\providecommand{\AiWerEnglish}{15\%}
+\providecommand{\AiWerHindi}{25\%}
+\providecommand{\AiNoticeDays}{30 days}
+\providecommand{\AiPromptTokens}{8{,}000}
+\providecommand{\AiTtft}{2 seconds}
+\providecommand{\AiTokensPerSecond}{30}
+\providecommand{\AiRtf}{15}
+\providecommand{\AiAvailability}{99.5\%}
+
+% --- Service levels ----------------------------------------------------------
+\providecommand{\PlatformSla}{99.9\% monthly}
+\providecommand{\SupportHours}{\ph{24x7 / business hours}}
+\providecommand{\IncidentResponse}{15 minutes}
+\providecommand{\IncidentResolution}{4 hours}
+\providecommand{\MaintenanceWindows}{\ph{schedule}}
+
+% --- Environment values sheet ------------------------------------------------
+\providecommand{\DicomEnabled}{\ph{yes / no}}
+\providecommand{\IngressIp}{\ph{x.x.x.x}}
+\providecommand{\EgressIp}{\ph{x.x.x.x}}
+\providecommand{\SmtpHost}{\ph{smtp.example.org}}
+
+% --- Derived values (computed; do not override) ------------------------------
+\newcommand{\KubeTotalCpu}{\the\numexpr\KubeNodeCount*\KubeNodeCpu\relax}
+\newcommand{\KubeTotalRam}{\the\numexpr\KubeNodeCount*\KubeNodeRam\relax~GB}
+\newcommand{\DbTotalCpu}{\the\numexpr\DbNodeCount*\DbNodeCpu\relax}
+\newcommand{\DbTotalRam}{\the\numexpr\DbNodeCount*\DbNodeRam\relax~GB}
+
+% =============================================================================
+% END CONFIGURATION -- no deployment-specific values below this line
+% =============================================================================
+
+% Requirement ID counter
+\newcounter{reqctr}
+\newcommand{\req}{\refstepcounter{reqctr}\textbf{REQ-\padreq}}
+\makeatletter
+\newcommand{\padreq}{\ifnum\value{reqctr}<10 0\fi\ifnum\value{reqctr}<100 0\fi\arabic{reqctr}}
+\makeatother
+
+% Header / footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small \ProjectName}
+\fancyhead[R]{\small CARE Infrastructure Requirement Specification}
+\fancyfoot[L]{\small Version \DocVersion}
+\fancyfoot[R]{\small Page \thepage\ of \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+% -----------------------------------------------------------------------------
+% Title page
+% -----------------------------------------------------------------------------
+\begin{titlepage}
+  \centering
+  \vspace*{3cm}
+  {\LARGE\bfseries CARE Infrastructure Requirement Specification\par}
+  \vspace{0.6cm}
+  {\Large Hosting the CARE Software Platform\par}
+  \vspace{0.3cm}
+  {\large at \DataCenterName\par}
+  \vspace{2cm}
+  \begin{tabular}{ll}
+    \toprule
+    Organisation      & \OrgName \\
+    Project           & \ProjectName \\
+    Document Version  & \DocVersion \\
+    Date              & \DocDate \\
+    Document Owner    & \DocOwner \\
+    \bottomrule
+  \end{tabular}
+  \vfill
+  {\small This document is a reusable template. Values shown as
+  \ph{placeholder} must be filled in for each deployment.\par}
+\end{titlepage}
+
+% -----------------------------------------------------------------------------
+\section*{Revision History}
+\begin{tabular}{@{}llll@{}}
+  \toprule
+  \textbf{Version} & \textbf{Date} & \textbf{Author} & \textbf{Description} \\
+  \midrule
+  \DocVersion & \DocDate & \DocAuthor & Initial draft \\
+  \bottomrule
+\end{tabular}
+
+\tableofcontents
+\newpage
+
+% -----------------------------------------------------------------------------
+\section{Purpose and Scope}
+
+This document specifies the infrastructure required to host the
+\textbf{CARE} software platform (an open-source healthcare information and
+TeleICU platform) within \DataCenterName. It is written in
+provider-agnostic terms: any infrastructure provider or on-premises platform that
+satisfies the requirements herein (e.g.\ a CNCF-conformant Kubernetes
+distribution, an S3-compatible object store, and a managed or self-hosted
+PostgreSQL cluster) is acceptable.
+
+The intended audience includes data center operations teams, infrastructure
+vendors, system integrators, and the application maintenance team.
+
+\subsection{Conventions}
+
+Requirements are individually numbered (\textbf{REQ-nnn}) and use RFC~2119
+keywords: \textbf{MUST}, \textbf{SHOULD}, \textbf{MAY}. Placeholder values are
+shown as \ph{placeholder}.
+
+% -----------------------------------------------------------------------------
+\section{Compute -- High Availability Kubernetes Cluster}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] The platform MUST provide a dedicated CNCF-conformant
+    Kubernetes cluster, version \KubeVersion, with a supported upgrade
+    path. Only CARE-specific containers and supporting CARE platform services
+    MUST run on this cluster.
+  \item[\req] The control plane MUST be highly available: a multi-master
+    configuration with at least \textbf{three} master/control-plane nodes (or
+    an equivalent managed control plane with a published availability SLA of
+    \ControlPlaneSla{} or better).
+  \item[\req] Worker nodes MUST be distributed across multiple failure
+    domains (availability zones, racks, or geo-locations) to avoid single
+    points of failure.
+  \item[\req] The cluster MUST support node auto-repair or documented
+    procedures for replacing failed nodes without application downtime.
+  \item[\req] A Cluster Autoscaler (or equivalent) MUST dynamically adjust
+    the number of worker nodes based on resource utilisation, within the
+    limits defined in Table~\ref{tab:sizing}.
+\end{itemize}
+
+\subsection{Required Capacity Sizing}
+
+\begin{table}[h!]
+  \centering
+  \scriptsize
+  \caption{Required infrastructure capacity.}
+  \label{tab:sizing}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}lllrrrrr@{}}
+    \toprule
+    \textbf{Role} & \textbf{Type} & \textbf{Quantity} &
+    \textbf{vCPU/VM} & \textbf{RAM/VM} & \textbf{Disk/VM} &
+    \textbf{Total vCPU} & \textbf{Total RAM} \\
+    \midrule
+    Kubernetes workload & Virtual & \KubeNodeCount & \KubeNodeCpu & \KubeNodeRam~GB & \KubeNodeDisk & \KubeTotalCpu & \KubeTotalRam \\
+    PostgreSQL cluster  & Virtual & \DbNodeCount   & \DbNodeCpu   & \DbNodeRam~GB   & \DbNodeDisk   & \DbTotalCpu   & \DbTotalRam   \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% -----------------------------------------------------------------------------
+\section{Networking}
+
+\subsection{Cluster Networking}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] The cluster MUST use a CNI (Container Network Interface) plugin
+    that supports Kubernetes \texttt{NetworkPolicy} resources, enabling
+    micro-segmentation between workloads.
+  \item[\req] It MUST be possible to create Network Policy resources to
+    control ingress and egress traffic between pods and namespaces.
+  \item[\req] Dedicated, non-overlapping, adequately sized \texttt{/24} IP
+    ranges MUST be allocated for nodes, pods, services, and databases.
+  \item[\req] Outbound internet access from the cluster MUST be provided via
+    NAT with a dedicated static egress IP address. The address MUST remain
+    stable to support allow-listed API access to secure external endpoints.
+\end{itemize}
+
+\subsection{Ingress, DNS, and TLS}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] An Ingress controller or Kubernetes Gateway API implementation
+    MUST be supported for L7 routing and traffic management, including SSL/TLS
+    termination, header rewriting, and authentication hooks.
+  \item[\req] Custom Resource Definitions (CRDs) MUST be permitted on the
+    cluster; in particular, cert-manager CRDs (\texttt{ClusterIssuer},
+    \texttt{Certificate}, etc.) for automated certificate issuance via
+    Let's Encrypt / ACME or another certificate authority.
+  \item[\req] Wildcard DNS for \texttt{*.\BaseDomain} MUST be provided
+    so that CARE can assign subdomains for different platform purposes. A
+    static public IP address MUST be reservable for the ingress endpoint.
+  \item[\req] TLS certificates for \texttt{*.\BaseDomain} MUST be
+    renewed automatically.
+  \item[\req] A web application firewall (WAF) or edge security policy SHOULD
+    be available, supporting OWASP core rule sets and geo-based access
+    restrictions, per \WafPolicy.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Object Storage (S3-Compatible)}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] An S3-compatible object storage service MUST be provided, with
+    high availability and horizontal scalability.
+  \item[\req] The object storage service MUST provide at least
+    \ObjectStorageCapacity{} of initial capacity and MUST support expansion
+    as required without service interruption.
+  \item[\req] Data lifecycle policies MUST be configurable, covering object
+    versioning, retention, and automatic deletion.
+  \item[\req] Encryption MUST be enforced at rest (AES-256 or stronger,
+    preferably with customer-managed keys) and in transit (TLS 1.2+).
+  \item[\req] Fine-grained access control MUST be enforceable via bucket
+    policies, IAM roles, and scoped access keys, so that only authorised
+    users and applications can access stored data.
+  \item[\req] HMAC-style access key/secret pairs (S3 API credentials) MUST be
+    issuable per application, with the ability to rotate and revoke them.
+  \item[\req] Presigned URL generation MUST be supported for time-limited
+    client uploads and downloads.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Persistent Storage (Kubernetes)}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] Dynamic volume provisioning MUST be supported via
+    \texttt{StorageClass} resources backed by the data center's block or file
+    storage, with the ability to define custom storage classes.
+  \item[\req] SSD-class storage MUST be available for latency-sensitive
+    workloads (databases, Redis persistence if enabled).
+  \item[\req] Volume snapshots and data replication MUST be supported for
+    critical application data, ensuring data integrity and availability.
+  \item[\req] Volume expansion SHOULD be supported without workload
+    recreation.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Relational Database (PostgreSQL)}
+
+\subsection{Cluster Topology and Availability}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] A managed, highly available PostgreSQL cluster (version
+    \PgVersion{} or later) MUST be provided as the primary application
+    datastore, with private-network-only connectivity and no public exposure.
+    It MUST provide broad PostgreSQL extension support, including
+    \texttt{pgvector}, supported Foreign Data Wrappers (FDWs), and other
+    CARE-required extensions.
+  \item[\req] The cluster MUST support one or more read replicas
+    (\ReadReplicaCount{} initially) for scalability and fault tolerance.
+  \item[\req] A separate PostgreSQL database or instance MUST be available
+    for analytics workloads when required.
+  \item[\req] Automated failover MUST be configured so that a standby is
+    promoted with minimal downtime (target RTO \DbFailoverRto) upon primary
+    failure.
+  \item[\req] Replication lag MUST be monitored, with alerting when lag
+    exceeds \ReplicationLagThreshold, enabling timely intervention.
+\end{itemize}
+
+\subsection{Data Protection and Security}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] Encryption MUST be enforced at rest (with managed key
+    management / KMS integration) and in transit (TLS) for all database
+    connections.
+  \item[\req] Automated backups MUST be configured, combining full,
+    incremental, and differential strategies, with point-in-time recovery
+    (PITR). Retention: \DbBackupRetention; backup frequency:
+    \DbBackupFrequency.
+  \item[\req] Backup restoration MUST be tested on a defined schedule
+    (\RestoreTestSchedule) with documented results.
+  \item[\req] Database-level security policies MUST be enforced: role-based
+    access control, audit logging of administrative actions, and least-
+    privilege application accounts.
+\end{itemize}
+
+\subsection{Operations and Scaling}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] Routine maintenance jobs (index optimisation, vacuuming, data
+    archiving) MUST be schedulable and monitored to sustain database
+    performance.
+  \item[\req] Data partitioning and sharding strategies SHOULD be supported
+    where required to distribute load across nodes, with appropriate data
+    modelling and management.
+  \item[\req] Minor and major version upgrades MUST be plannable and
+    executable with minimal downtime (target \DbMaintenanceWindow).
+  \item[\req] Vertical and/or horizontal auto-scaling policies SHOULD be
+    available to adjust database resources based on workload demand.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Security}
+
+\subsection{Access Control}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] Fine-grained Kubernetes RBAC MUST be enforced so that only
+    authorised personnel can access and manage specific cluster resources.
+    Roles: \RbacRoles.
+  \item[\req] Pod-level security controls MUST be enforced via Pod Security
+    Admission (or PodSecurityPolicies on older distributions), restricting
+    privileged containers, host access, and capability escalation.
+  \item[\req] Administrative access to nodes and databases MUST be restricted
+    to a hardened bastion/jump host with SSH key-based authentication and
+    session auditing.
+\end{itemize}
+
+\subsection{Secrets Management}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] A secrets management solution MUST be provided -- e.g.\
+    HashiCorp Vault, a secret manager, or the Kubernetes Secrets Store
+    CSI Driver -- for secure storage and distribution of sensitive data
+    (database credentials, API keys, signing keys).
+\end{itemize}
+
+\subsection{Compliance and Auditing}
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] Kubernetes audit logging MUST be enabled and retained for
+    \AuditLogRetention.
+  \item[\req] The deployment MUST maintain compliance with
+    \ComplianceStandards.
+  \item[\req] Network flow logs SHOULD be captured and retained for
+    \FlowLogRetention{} for forensic analysis.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Observability}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] Centralized logging MUST provide application error tracking,
+    infrastructure and application log aggregation, searchable analysis, and
+    appropriate retention controls. The specific technology stack will be
+    selected during implementation.
+  \item[\req] Metrics-based monitoring MUST track application and
+    infrastructure performance (CPU, memory, disk, request latency, error
+    rates, queue depth).
+  \item[\req] Alerting MUST be configured for anomalies -- including failed
+    deployments, pod crash loops, certificate expiry, database replication
+    lag, storage capacity, and backup failures -- delivered to
+    \AlertChannel.
+  \item[\req] Dashboards SHOULD be provided for at-a-glance health of the
+    cluster, databases, and application components.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Backup and Disaster Recovery}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] A documented backup and disaster recovery strategy MUST exist,
+    including off-site backups, data snapshots, and automated failover
+    procedures.
+  \item[\req] Full-cluster backup and restore procedures MUST be implemented,
+    including etcd (or the managed control plane's state), to ensure
+    integrity during failures.
+  \item[\req] Recovery objectives MUST be agreed and tested:
+    RPO \ClusterRpo, RTO \ClusterRto.
+  \item[\req] DR drills MUST be conducted at least \DrDrillFrequency, with
+    documented outcomes and remediation actions.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Email (SMTP)}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] An SMTP server or relay service MUST be provided to handle
+    email traffic for \BaseDomain{} (transactional email: password resets,
+    notifications).
+  \item[\req] SPF, DKIM, and DMARC records MUST be configured for the sending
+    domain to ensure deliverability.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{CI/CD and Release Management}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] A container registry MUST be available, reachable from the
+    cluster, for hosting application images.
+  \item[\req] Continuous deployment MUST be supported so that successfully
+    tested changes are promoted to production without manual intervention,
+    using \CicdTool{} with short-lived federated credentials
+    (OIDC / workload identity federation) rather than static keys.
+  \item[\req] A centralized, access-controlled Git repository MUST serve as
+    the source of truth for GitOps. It MUST include application deployment
+    configuration, Kubernetes manifests, and infrastructure-as-code,
+    including Terraform or equivalent definitions, with version history and
+    change-approval controls.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Documentation}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] Exhaustive documentation MUST be delivered, covering
+    architecture, network topology, runbooks for routine operations, and
+    escalation procedures.
+  \item[\req] Documentation MUST be kept current with infrastructure changes
+    as part of the change management process.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Artificial Intelligence Services}
+
+\begin{itemize}[leftmargin=2.2cm]
+  \item[\req] An OpenAI-compatible HTTP API endpoint MUST be provided,
+    implementing at minimum \texttt{/v1/chat/completions},
+    \texttt{/v1/audio/transcriptions} and \texttt{/v1/embeddings}, with support
+    for SSE streaming, tool calling, and JSON-Schema-constrained structured
+    output. The capabilities below MAY be satisfied by separate models, but all
+    MUST be reachable through this single endpoint.
+
+  \item[\req] A text model MUST be available with a context window of at least
+    \AiTextContext{} tokens and generated output of at least \AiTextOutput{}
+    tokens, meeting or exceeding published scores of \AiMmluPro{} MMLU-Pro,
+    \AiIfEval{} IFEval and \AiGpqa{} GPQA-Diamond.
+
+  \item[\req] A vision-capable model MUST be available, accepting interleaved
+    text and image input in a single request, meeting or exceeding a published
+    score of \AiMmmu{} on MMMU (val). Document and form understanding
+    MUST be supported at scanned-document resolution.
+
+  \item[\req] A speech-transcription model MUST be available, accepting at
+    least \AiAudioMinutes{} of audio per request, returning word-level
+    timestamps, with automatic language identification and the ability to
+    force a specified language. It MUST support code-mixed Hindi-English and
+    Indian-English speech, and direct speech-to-English translation. Word
+    Error Rate MUST NOT exceed \AiWerEnglish{} for English and \AiWerHindi{}
+    for Hindi against a named public benchmark. For any other language
+    offered, WER MUST be documented per language; multilingual averages are
+    not acceptable in place of per-language figures.
+
+  \item[\req] For each available model, the following MUST be documented and
+    kept current: model family and version, parameter count, weight and
+    KV-cache quantization format, serving runtime, and context window as
+    served. Any change to these MUST be notified \AiNoticeDays{} in advance.
+    Models MUST NOT be substituted, nor their precision, parameter count or
+    context window reduced, without such notification.
+
+  \item[\req] The service MUST sustain concurrent requests at a
+    prompt length of \AiPromptTokens{} tokens, with p95 time-to-first-token
+    not exceeding \AiTtft{} and sustained generation of at least
+    \AiTokensPerSecond{} output tokens per second per stream. Speech
+    transcription MUST achieve a real-time factor of at least \AiRtf,
+    measured end-to-end at the API endpoint. Rate limits, where applied,
+    MUST be documented numerically per model.
+
+  \item[\req] Monthly availability MUST be at least \AiAvailability,
+    measured at the API endpoint and independently verifiable. Rate limits,
+    where applied, MUST be documented numerically per model.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Service Levels and Support}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Item} & \textbf{Target} \\
+    \midrule
+    Platform availability            & \PlatformSla \\
+    Support hours                    & \SupportHours \\
+    Incident response (P1)           & \IncidentResponse \\
+    Incident resolution (P1)         & \IncidentResolution \\
+    Maintenance windows              & \MaintenanceWindows \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% -----------------------------------------------------------------------------
+\appendix
+\section{Glossary}
+
+\begin{longtable}{@{}p{3.5cm}p{11cm}@{}}
+  \toprule
+  \textbf{Term} & \textbf{Definition} \\
+  \midrule
+  CNI    & Container Network Interface -- pluggable pod networking layer. \\
+  CRD    & Custom Resource Definition -- extension mechanism for the Kubernetes API. \\
+  HPA    & Horizontal Pod Autoscaler. \\
+  KMS    & Key Management Service. \\
+  PITR   & Point-In-Time Recovery. \\
+  RBAC   & Role-Based Access Control. \\
+  RPO/RTO & Recovery Point / Recovery Time Objective. \\
+  WAF    & Web Application Firewall. \\
+  WIF    & Workload Identity Federation -- keyless CI/CD authentication. \\
+  \bottomrule
+\end{longtable}
+
+\section{Environment Values Sheet}
+
+To be completed per environment (staging / production):
+
+\begin{longtable}{@{}p{5.5cm}p{9cm}@{}}
+  \toprule
+  \textbf{Parameter} & \textbf{Value} \\
+  \midrule
+  Environment name              & \EnvName \\
+  Region / location             & \RegionLocation \\
+  Kubernetes version            & \KubeVersion \\
+  Kubernetes workload nodes     & \KubeNodeCount{} virtual nodes; \KubeNodeCpu{} vCPU / \KubeNodeRam{} GB / \KubeNodeDisk{} each \\
+  Pod CIDR                      & Dedicated non-overlapping \texttt{/24} \\
+  Service CIDR                  & Dedicated non-overlapping \texttt{/24} \\
+  Database version / size       & PostgreSQL \PgVersion{} or later; \DbNodeCount{} virtual nodes; \DbNodeCpu{} vCPU / \DbNodeRam{} GB / \DbNodeDisk{} each \\
+  Read replica count            & \ReadReplicaCount \\
+  Object storage capacity       & \ObjectStorageCapacity{} initially; scalable on demand \\
+  Wildcard DNS domain           & \texttt{*.\BaseDomain} \\
+  DICOM enabled                 & \DicomEnabled \\
+  Ingress public IP             & \IngressIp \\
+  Egress (NAT) IP               & \EgressIp \\
+  SMTP relay host               & \SmtpHost \\
+  Container registry            & \ContainerRegistry \\
+  \bottomrule
+\end{longtable}
+
+\end{document}

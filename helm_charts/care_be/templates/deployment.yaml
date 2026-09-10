@@ -7,6 +7,8 @@ metadata:
     {{- include "care-be.labels" . | nindent 4 }}
     app.kubernetes.io/component: api
 spec:
+  strategy:
+    {{- toYaml (.Values.api.strategy | default (dict "type" "RollingUpdate")) | nindent 4 }}
   {{- if not .Values.api.autoscaling.enabled }}
   replicas: {{ .Values.api.replicaCount }}
   {{- end }}
@@ -150,4 +152,3 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}
-

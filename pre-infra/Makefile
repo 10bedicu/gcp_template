@@ -1,4 +1,4 @@
-.PHONY: init plan deploy destroy lint pull-tfvars push-tfvars
+.PHONY: init plan deploy destroy lint output pull-tfvars push-tfvars
 
 # pre-infra reads variables from a tfvars file pulled from Secret Manager.
 # Required env vars:
@@ -16,6 +16,7 @@ TFVARS_FILE ?= ../environments/$(ENV_NAME).tfvars
 LOCAL_TFVARS_FILE ?= $(TFVARS_FILE)
 TFVARS_ARGS := -var-file=$(TFVARS_FILE)
 APPROVE_FLAG := $(if $(filter true,$(AUTO_APPROVE)),-auto-approve)
+PUSH_YES_FLAG := $(if $(filter true,$(PUSH_YES)),--yes)
 
 pull-tfvars:
 	@test -n "$(PROJECT_ID)" || (echo "ERROR: PROJECT_ID (or TF_VAR_project_id) is required" && exit 1)
@@ -35,7 +36,8 @@ push-tfvars:
 		--project="$(PROJECT_ID)" \
 		--env="$(ENV_NAME)" \
 		--secret="$(TFVARS_SECRET_NAME)" \
-		--file="$(LOCAL_TFVARS_FILE)"
+		--file="$(LOCAL_TFVARS_FILE)" \
+		$(PUSH_YES_FLAG)
 
 init:
 	@tofu init \
@@ -53,3 +55,6 @@ destroy: pull-tfvars
 
 lint:
 	@tofu fmt -write=true -recursive
+
+output:
+	@tofu output

@@ -12,8 +12,8 @@ Modules are applied in the following order:
 | Module | Purpose |
 |--------|---------|
 | `pre-infra/` | Bootstrap (APIs, optional DNS zone) |
-| `infra/` | VPC, GKE, Cloud SQL, GCS, Cloud Armor, GitHub WIF |
 | `KMS/` | Key ring and encryption keys |
+| `infra/` | VPC, GKE, Cloud SQL, GCS, Cloud Armor, GitHub WIF |
 | `deploy/` | Namespace, secrets, Helm releases |
 
 Each module typically contains:
@@ -75,11 +75,11 @@ GCS backend with the following prefixes:
 | Module | Prefix |
 |--------|--------|
 | `pre-infra/` | `pre-infra` |
-| `infra/` | `infra` |
 | `KMS/` | `keys` |
+| `infra/` | `infra` |
 | `deploy/` | `deploy-backend` |
 
-The `deploy/` module runs `tofu plan` with `-lock=false`. All other modules lock normally.
+All modules use normal state locking.
 
 ## Adding Secrets
 

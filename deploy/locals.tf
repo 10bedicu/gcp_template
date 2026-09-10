@@ -19,6 +19,11 @@ locals {
   app_name       = var.app
   environment    = var.environment
 
+  cors_allowed_origins = concat(
+    [for d in var.web_domain_name : "https://${d}"],
+    var.enable_local_cors ? ["http://localhost:4000"] : []
+  )
+
   chart_hashes = {
     for name in ["gateway", "redis", "metabase", "care_be", "care_fe", "dcm4chee"] :
     name => sha1(join("", [
@@ -51,7 +56,7 @@ locals {
     BUCKET_REGION                                 = var.region
     CSRF_TRUSTED_ORIGINS                          = jsonencode(concat([for d in var.web_domain_name : "https://${d}"], [for d in var.api_domain_name : "https://${d}"]))
     DJANGO_ALLOWED_HOSTS                          = jsonencode(["*"])
-    CORS_ALLOWED_ORIGINS                          = jsonencode([for d in var.web_domain_name : "https://${d}"])
+    CORS_ALLOWED_ORIGINS                          = jsonencode(local.cors_allowed_origins)
     RATE_LIMIT                                    = "5/10m"
     AWS_REQUEST_CHECKSUM_CALCULATION              = "when_required"
     SNOWSTORM_DEPLOYMENT_URL                      = var.snowstorm_deployment_url

@@ -59,11 +59,11 @@ export ENV_NAME="<environment-name>"
    make init BACKEND_BUCKET=<state-bucket>
    make plan PROJECT_ID=<gcp-project> ENV_NAME=<env> BACKEND_BUCKET=<state-bucket>
 
-   cd ../infra
+   cd ../KMS
    make init BACKEND_BUCKET=<state-bucket>
    make plan PROJECT_ID=<gcp-project> ENV_NAME=<env> BACKEND_BUCKET=<state-bucket>
 
-   cd ../KMS
+   cd ../infra
    make init BACKEND_BUCKET=<state-bucket>
    make plan PROJECT_ID=<gcp-project> ENV_NAME=<env> BACKEND_BUCKET=<state-bucket>
 
@@ -82,7 +82,7 @@ The source of truth for all variables is the root `variables.tf`.
 |----------|------|---------|---------|
 | `project_id` | `string` | — | `"example-project-id"` |
 | `project_number` | `string` | `null` | `"123456789012"` |
-| `region` | `string` | `"us-central1"` | `"asia-south1"` |
+| `region` | `string` | `"asia-south1"` | `"asia-south1"` |
 | `org` | `string` | `"ohn"` | `"example-org"` |
 | `app` | `string` | — | `"example-app"` |
 | `environment` | `string` | `"prod"` | `"staging"` |
@@ -117,12 +117,13 @@ The source of truth for all variables is the root `variables.tf`.
 
 | Variable | Type | Default | Example |
 |----------|------|---------|---------|
-| `cloudsql_tier` | `string` | `null` | `"db-custom-2-3840"` |
-| `cloudsql_disk_size` | `any` | `null` | `10` |
-| `cloudsql_read_replica_count` | `any` | `0` | `1` |
-| `cloudsql_read_replica_tier` | `string` | `null` | `"db-custom-1-3840"` |
-| `metabase_cloudsql_tier` | `string` | `null` | `"db-f1-micro"` |
-| `metabase_cloudsql_disk_size` | `any` | `null` | `10` |
+| `cloudsql_tier` | `string` | `"db-custom-2-3840"` | `"db-custom-2-3840"` |
+| `cloudsql_availability_type` | `string` | `"ZONAL"` | `"REGIONAL"` |
+| `cloudsql_disk_size` | `any` | `10` | `10` |
+| `cloudsql_read_replica_count` | `any` | `1` | `1` |
+| `cloudsql_read_replica_tier` | `string` | `"db-custom-1-3840"` | `"db-custom-1-3840"` |
+| `metabase_cloudsql_tier` | `string` | `"db-f1-micro"` | `"db-f1-micro"` |
+| `metabase_cloudsql_disk_size` | `any` | `10` | `10` |
 
 ### Feature Flags
 
@@ -134,6 +135,9 @@ The source of truth for all variables is the root `variables.tf`.
 | `enable_github_wif` | `bool` | `false` | `true` |
 | `enable_backend_access_logging` | `bool` | `false` | `true` |
 | `backend_logging_sample_rate` | `number` | `100000` | `500000` |
+| `enable_jumphost` | `bool` | `true` | `true` |
+| `enable_local_cors` | `bool` | `false` | `false` |
+| `enable_scribe` | `bool` | `false` | `false` |
 | `github_repo` | `string` | `""` | `"example-org/example-repo"` |
 
 > `enable_backend_access_logging` turns on Cloud Logging access logs for every Gateway backend service (CARE backend, CARE frontend, Metabase, DICOM). It is **opt-in** because these logs record the full request URL, including query strings that may contain patient identifiers — enable it only after reviewing log retention and who holds `roles/logging.viewer` on the project. `backend_logging_sample_rate` applies only when logging is enabled and must be an integer between `0` and `1000000`; GKE divides it by `1000000` to derive the logged proportion (`1000000` = all requests, `500000` = 50%, `100000` = 10%). Log volume and cost scale directly with this value.
@@ -143,7 +147,7 @@ The source of truth for all variables is the root `variables.tf`.
 | Variable | Type | Default | Example |
 |----------|------|---------|---------|
 | `jwks_base64` | `string` | `""` | `"CHANGE_ME_BASE64_JWKS"` |
-| `helm_config` | `object({ care_backend = object({ repository = string, tag = string, api_replica_count = optional(number, 2), celery_worker_replica_count = optional(number, 1) }), care_frontend = object({ repository = string, tag = string }), metabase = object({ repository = string, tag = string }), redis = object({ repository = string, tag = string }) })` | n/a | Helm image/release config per service. `care_backend.api_replica_count` (default `2`) and `care_backend.celery_worker_replica_count` (default `1`) are optional. |
+| `helm_config` | `object` | n/a | Helm images, replicas, validated complete per-workload resource overrides, and non-DICOM deployment strategy. Set `limits.cpu = null` to remove CPU limits. |
 | `additional_secrets` | `map(string)` | `{}` | Non-sensitive placeholders only |
 | `additional_config_map_data` | `map(string)` | `{}` | Application config overrides |
 | `additional_plugs` | `string` | `"[]"` | JSON-encoded plugin manifest; overwritten by the deploy pipeline from `build/care/care.env` on every run (edit it there, not in tfvars) |
@@ -169,3 +173,6 @@ All default to `null`, allowing auto-derived names.
 | `flow_logs_bucket` | `string` |
 | `cloudsql_private_ip_name` | `string` |
 | `nat_ip_address_name` | `string` |
+| `proxy_only_subnet_name` | `string` |
+| `scribe_sa_name` | `string` |
+| `wif_sa_name` | `string` |

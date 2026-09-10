@@ -60,16 +60,21 @@ locals {
     }
   }
 
-  redis_values = {
-    replicaCount = 1
-    image = {
-      repository = var.helm_config.redis.repository
-      tag        = var.helm_config.redis.tag
-    }
-  }
+  redis_values = merge(
+    {
+      replicaCount = var.helm_config.redis.replica_count
+      strategy     = { type = var.helm_config.deployment_strategy }
+      image = {
+        repository = var.helm_config.redis.repository
+        tag        = var.helm_config.redis.tag
+      }
+    },
+    var.helm_config.redis.resources != null ? { resources = var.helm_config.redis.resources } : {}
+  )
 
   metabase_values = {
-    replicaCount = 1
+    replicaCount = var.helm_config.metabase.replica_count
+    strategy     = { type = var.helm_config.deployment_strategy }
     image = {
       repository = var.helm_config.metabase.repository
       tag        = var.helm_config.metabase.tag
@@ -90,7 +95,8 @@ locals {
     envFromSecret = [
       { name = kubernetes_secret.metabase.metadata[0].name }
     ]
-    resources = {
+    # Preserve the pre-existing Metabase sizing when no environment override is supplied.
+    resources = var.helm_config.metabase.resources != null ? var.helm_config.metabase.resources : {
       limits = {
         cpu    = "2000m"
         memory = "3Gi"
@@ -125,38 +131,51 @@ locals {
       repository = var.helm_config.care_backend.repository
       tag        = var.helm_config.care_backend.tag
     }
-    api = {
-      replicaCount = var.helm_config.care_backend.api_replica_count
-      autoscaling = {
-        enabled                        = var.helm_config.care_backend.api_autoscaling_enabled
-        minReplicas                    = var.helm_config.care_backend.api_autoscaling_min_replicas
-        maxReplicas                    = var.helm_config.care_backend.api_autoscaling_max_replicas
-        targetCPUUtilizationPercentage = var.helm_config.care_backend.api_autoscaling_target_cpu
-      }
-      podAnnotations = {
-        "checksum/external-secret" = local.care_backend_secret_checksum
-        "checksum/external-config" = local.care_backend_config_checksum
-      }
-    }
-    celeryWorker = {
-      replicaCount = var.helm_config.care_backend.celery_worker_replica_count
-      autoscaling = {
-        enabled                        = var.helm_config.care_backend.celery_worker_autoscaling_enabled
-        minReplicas                    = var.helm_config.care_backend.celery_worker_autoscaling_min_replicas
-        maxReplicas                    = var.helm_config.care_backend.celery_worker_autoscaling_max_replicas
-        targetCPUUtilizationPercentage = var.helm_config.care_backend.celery_worker_autoscaling_target_cpu
-      }
-      podAnnotations = {
-        "checksum/external-secret" = local.care_backend_secret_checksum
-        "checksum/external-config" = local.care_backend_config_checksum
-      }
-    }
-    celeryBeat = {
-      podAnnotations = {
-        "checksum/external-secret" = local.care_backend_secret_checksum
-        "checksum/external-config" = local.care_backend_config_checksum
-      }
-    }
+    api = merge(
+      {
+        replicaCount = var.helm_config.care_backend.api_replica_count
+        strategy     = { type = var.helm_config.deployment_strategy }
+        autoscaling = {
+          enabled                        = var.helm_config.care_backend.api_autoscaling_enabled
+          minReplicas                    = var.helm_config.care_backend.api_autoscaling_min_replicas
+          maxReplicas                    = var.helm_config.care_backend.api_autoscaling_max_replicas
+          targetCPUUtilizationPercentage = var.helm_config.care_backend.api_autoscaling_target_cpu
+        }
+        podAnnotations = {
+          "checksum/external-secret" = local.care_backend_secret_checksum
+          "checksum/external-config" = local.care_backend_config_checksum
+        }
+      },
+      var.helm_config.care_backend.api_resources != null ? { resources = var.helm_config.care_backend.api_resources } : {}
+    )
+    celeryWorker = merge(
+      {
+        replicaCount = var.helm_config.care_backend.celery_worker_replica_count
+        strategy     = { type = var.helm_config.deployment_strategy }
+        autoscaling = {
+          enabled                        = var.helm_config.care_backend.celery_worker_autoscaling_enabled
+          minReplicas                    = var.helm_config.care_backend.celery_worker_autoscaling_min_replicas
+          maxReplicas                    = var.helm_config.care_backend.celery_worker_autoscaling_max_replicas
+          targetCPUUtilizationPercentage = var.helm_config.care_backend.celery_worker_autoscaling_target_cpu
+        }
+        podAnnotations = {
+          "checksum/external-secret" = local.care_backend_secret_checksum
+          "checksum/external-config" = local.care_backend_config_checksum
+        }
+      },
+      var.helm_config.care_backend.celery_worker_resources != null ? { resources = var.helm_config.care_backend.celery_worker_resources } : {}
+    )
+    celeryBeat = merge(
+      {
+        replicaCount = var.helm_config.care_backend.celery_beat_replica_count
+        strategy     = { type = var.helm_config.deployment_strategy }
+        podAnnotations = {
+          "checksum/external-secret" = local.care_backend_secret_checksum
+          "checksum/external-config" = local.care_backend_config_checksum
+        }
+      },
+      var.helm_config.care_backend.celery_beat_resources != null ? { resources = var.helm_config.care_backend.celery_beat_resources } : {}
+    )
     podAnnotations = {
       "checksum/external-secret" = local.care_backend_secret_checksum
       "checksum/external-config" = local.care_backend_config_checksum
@@ -173,16 +192,20 @@ locals {
     ]
   }
 
-  care_frontend_values = {
-    replicaCount = 2
-    image = {
-      repository = var.helm_config.care_frontend.repository
-      tag        = var.helm_config.care_frontend.tag
-    }
-    httpRoute = {
-      hostnames = var.web_domain_name
-    }
-  }
+  care_frontend_values = merge(
+    {
+      replicaCount = var.helm_config.care_frontend.replica_count
+      strategy     = { type = var.helm_config.deployment_strategy }
+      image = {
+        repository = var.helm_config.care_frontend.repository
+        tag        = var.helm_config.care_frontend.tag
+      }
+      httpRoute = {
+        hostnames = var.web_domain_name
+      }
+    },
+    var.helm_config.care_frontend.resources != null ? { resources = var.helm_config.care_frontend.resources } : {}
+  )
 
   dcm4chee_values = {
     dicomBaseUrl = var.enable_dicom ? "https://${var.dicom_domain_name[0]}" : ""
