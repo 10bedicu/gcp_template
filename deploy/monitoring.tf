@@ -1,5 +1,7 @@
 locals {
-  celery_queue_length_query = "max by (queue) (celery_queue_length{cluster=\"${data.terraform_remote_state.infra.outputs.cluster_name}\",namespace=\"${local.namespace_name}\",queue=\"${var.helm_config.care_metrics_exporter.queue}\"})"
+  celery_queue_length_query              = "max by (queue) (celery_queue_length{cluster=\"${data.terraform_remote_state.infra.outputs.cluster_name}\",namespace=\"${local.namespace_name}\",queue=\"${var.helm_config.care_metrics_exporter.queue}\"})"
+  celery_worker_desired_replicas_query   = "kube_deployment_spec_replicas{cluster=\"${data.terraform_remote_state.infra.outputs.cluster_name}\",namespace=\"${local.namespace_name}\",deployment=\"care-backend-care-be-celery-worker\"}"
+  celery_worker_available_replicas_query = "kube_deployment_status_replicas_available{cluster=\"${data.terraform_remote_state.infra.outputs.cluster_name}\",namespace=\"${local.namespace_name}\",deployment=\"care-backend-care-be-celery-worker\"}"
 }
 
 resource "google_monitoring_dashboard" "care_application" {
@@ -9,28 +11,63 @@ resource "google_monitoring_dashboard" "care_application" {
     displayName = "CARE Application - ${var.environment}"
     mosaicLayout = {
       columns = 48
-      tiles = [{
-        xPos   = 0
-        yPos   = 0
-        width  = 48
-        height = 20
-        widget = {
-          title = "Celery queue length"
-          xyChart = {
-            dataSets = [{
-              plotType   = "LINE"
-              targetAxis = "Y1"
-              timeSeriesQuery = {
-                prometheusQuery = local.celery_queue_length_query
+      tiles = [
+        {
+          xPos   = 0
+          yPos   = 0
+          width  = 48
+          height = 20
+          widget = {
+            title = "Celery queue length"
+            xyChart = {
+              dataSets = [{
+                plotType   = "LINE"
+                targetAxis = "Y1"
+                timeSeriesQuery = {
+                  prometheusQuery = local.celery_queue_length_query
+                }
+              }]
+              yAxis = {
+                label = "messages"
+                scale = "LINEAR"
               }
-            }]
-            yAxis = {
-              label = "messages"
-              scale = "LINEAR"
             }
           }
-        }
-      }]
+        },
+        {
+          xPos   = 0
+          yPos   = 20
+          width  = 48
+          height = 20
+          widget = {
+            title = "Celery worker replicas"
+            xyChart = {
+              dataSets = [
+                {
+                  plotType       = "LINE"
+                  targetAxis     = "Y1"
+                  legendTemplate = "Desired"
+                  timeSeriesQuery = {
+                    prometheusQuery = local.celery_worker_desired_replicas_query
+                  }
+                },
+                {
+                  plotType       = "LINE"
+                  targetAxis     = "Y1"
+                  legendTemplate = "Available"
+                  timeSeriesQuery = {
+                    prometheusQuery = local.celery_worker_available_replicas_query
+                  }
+                },
+              ]
+              yAxis = {
+                label = "replicas"
+                scale = "LINEAR"
+              }
+            }
+          }
+        },
+      ]
     }
   })
 }
