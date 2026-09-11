@@ -116,9 +116,11 @@ The `deploy/` module additionally requires: `kubernetes ~> 2.0`, `helm ~> 2.0`, 
 
 Helm values are defined as locals in `deploy/helm-values.tf` and passed directly to `helm_release` resources in `deploy/helm.tf` via `yamlencode()`. Chart-specific values are merged with `common_helm_values` (defined in `deploy/locals.tf`) at release time. File-based value generation under `deploy/generated_values/` is currently disabled.
 
-Local charts: `gateway`, `redis`, `metabase`, `care_be`, `care_fe`, `dcm4chee`.
+Local charts: `gateway`, `redis`, `metabase`, `care_be`, `care_fe`, `dcm4chee`, `care_metrics_exporter`.
 
 Additionally, `cert-manager` (`v1.19.4` from `https://charts.jetstack.io`) is installed as a hard dependency for TLS and Gateway API integration. The Gateway Helm release depends on cert-manager being ready.
+
+`care_metrics_exporter` uses Google Managed Service for Prometheus. Its chart creates a native `monitoring.googleapis.com/v1` `PodMonitoring`; do not replace it with a Prometheus Operator `ServiceMonitor`. The exporter receives only `CELERY_BROKER_URL` from the CARE backend Secret.
 
 ### External TLS Certificates
 

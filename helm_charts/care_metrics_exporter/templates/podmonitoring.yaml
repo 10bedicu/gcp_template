@@ -1,0 +1,15 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: {{ include "care-metrics-exporter.fullname" . }}
+  labels:
+    {{- include "care-metrics-exporter.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "care-metrics-exporter.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ .Values.podMonitoring.interval }}
+      timeout: {{ .Values.podMonitoring.timeout }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: care-metrics-exporter
+description: Prometheus exporter for CARE Celery queue depth
+type: application
+version: 0.1.0
+appVersion: "8ab2445d7cf88e6f335f1d951062c1b6f9df9a3d"

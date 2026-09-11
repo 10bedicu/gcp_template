@@ -278,6 +278,12 @@ variable "helm_config" {
       replica_count = optional(number, 1)
       resources     = optional(any)
     }), {})
+    care_metrics_exporter = optional(object({
+      repository = optional(string, "ghcr.io/jesbinjoseph/care-metrics-exporter")
+      tag        = optional(string, "8ab2445d7cf88e6f335f1d951062c1b6f9df9a3d")
+      queue      = optional(string, "celery")
+      log_level  = optional(string, "INFO")
+    }), {})
   })
 
   validation {
@@ -297,6 +303,22 @@ variable "helm_config" {
   validation {
     condition     = contains(["RollingUpdate", "Recreate"], var.helm_config.deployment_strategy)
     error_message = "helm_config.deployment_strategy must be either \"RollingUpdate\" or \"Recreate\"."
+  }
+
+  validation {
+    condition = (
+      trimspace(var.helm_config.care_metrics_exporter.repository) != "" &&
+      can(regex("^[0-9a-f]{40}$", var.helm_config.care_metrics_exporter.tag))
+    )
+    error_message = "care_metrics_exporter requires a non-empty repository and an immutable 40-character Git commit SHA tag."
+  }
+
+  validation {
+    condition = (
+      can(regex("^[A-Za-z0-9_.-]+$", var.helm_config.care_metrics_exporter.queue)) &&
+      contains(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], upper(var.helm_config.care_metrics_exporter.log_level))
+    )
+    error_message = "care_metrics_exporter.queue must contain only letters, numbers, dots, underscores, and hyphens; log_level must be valid."
   }
 
   validation {
@@ -356,6 +378,20 @@ variable "helm_config" {
   validation {
     condition     = var.helm_config.care_backend.celery_worker_autoscaling_target_cpu >= 1 && var.helm_config.care_backend.celery_worker_autoscaling_target_cpu <= 100
     error_message = "celery_worker_autoscaling_target_cpu must be between 1 and 100."
+  }
+}
+
+variable "monitoring_notification_emails" {
+  description = "Email addresses that receive common Cloud Monitoring alerts"
+  type        = set(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for email in var.monitoring_notification_emails :
+      can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", email))
+    ])
+    error_message = "monitoring_notification_emails must contain valid email addresses."
   }
 }
 
