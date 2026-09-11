@@ -97,14 +97,12 @@ Replica counts accept non-negative integers. Increasing a replica count also mul
 
 ## Celery Queue Monitoring
 
-Enable the standalone CARE metrics exporter through `helm_config`:
+Configure the standalone CARE metrics exporter through `helm_config`:
 
 ```hcl
 helm_config = {
   # Existing service configuration omitted.
   care_metrics_exporter = {
-    enabled = true
-
     # Optional immutable image overrides:
     # repository = "ghcr.io/jesbinjoseph/care-metrics-exporter"
     # tag        = "8ab2445d7cf88e6f335f1d951062c1b6f9df9a3d"

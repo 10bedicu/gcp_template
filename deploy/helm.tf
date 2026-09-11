@@ -83,8 +83,12 @@ resource "helm_release" "redis" {
 }
 
 # Helm Chart for CARE Metrics Exporter
+moved {
+  from = helm_release.care_metrics_exporter[0]
+  to   = helm_release.care_metrics_exporter
+}
+
 resource "helm_release" "care_metrics_exporter" {
-  count       = var.helm_config.care_metrics_exporter.enabled ? 1 : 0
   name        = "care-metrics-exporter"
   chart       = "${path.module}/../helm_charts/care_metrics_exporter"
   namespace   = local.namespace_name

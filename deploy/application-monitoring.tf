@@ -89,8 +89,12 @@ resource "google_monitoring_notification_channel" "email" {
   }
 }
 
+moved {
+  from = google_monitoring_alert_policy.care_queue_length[0]
+  to   = google_monitoring_alert_policy.care_queue_length
+}
+
 resource "google_monitoring_alert_policy" "care_queue_length" {
-  count   = var.helm_config.care_metrics_exporter.enabled ? 1 : 0
   project = var.project_id
 
   display_name          = "CARE Celery queue above 200 - ${var.environment}"

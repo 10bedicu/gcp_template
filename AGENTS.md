@@ -120,7 +120,7 @@ Local charts: `gateway`, `redis`, `metabase`, `care_be`, `care_fe`, `dcm4chee`, 
 
 Additionally, `cert-manager` (`v1.19.4` from `https://charts.jetstack.io`) is installed as a hard dependency for TLS and Gateway API integration. The Gateway Helm release depends on cert-manager being ready.
 
-`care_metrics_exporter` is optional and uses Google Managed Service for Prometheus. Its chart creates a native `monitoring.googleapis.com/v1` `PodMonitoring`; do not replace it with a Prometheus Operator `ServiceMonitor`. The exporter receives only `CELERY_BROKER_URL` from the CARE backend Secret.
+`care_metrics_exporter` uses Google Managed Service for Prometheus. Its chart creates a native `monitoring.googleapis.com/v1` `PodMonitoring`; do not replace it with a Prometheus Operator `ServiceMonitor`. The exporter receives only `CELERY_BROKER_URL` from the CARE backend Secret.
 
 ### External TLS Certificates
 
