@@ -20,6 +20,11 @@ locals {
       "roles/secretmanager.secretVersionManager", # Write new secret versions (CI image tag updates)
       "roles/storage.admin",                      # GCS state backend read/write (can scope to state bucket)
       "roles/artifactregistry.writer",            # Push/pull container images
+
+      "roles/monitoring.dashboardEditor",
+      "roles/monitoring.alertPolicyEditor",
+      "roles/monitoring.notificationChannelEditor",
+      "roles/serviceusage.serviceUsageConsumer",
     ],
     # Conditional: only when legacy ingress is enabled
     var.enable_legacy_ingress ? [
